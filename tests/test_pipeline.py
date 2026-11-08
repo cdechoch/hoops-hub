@@ -1,0 +1,146 @@
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "pipeline"))
+
+import cap, draft, injuries, news, picks, scores  # noqa: E402
+
+
+def team(name, abbr, score, home):
+    return {"homeAway": "home" if home else "away", "score": str(score), "team": {"displayName": name, "abbreviation": abbr, "logo": ""}}
+
+
+def test_scoreboard_filters_college_to_followed_teams():
+    data = {"events": [
+        {"id": "1", "date": "2026-11-07T20:00Z", "status": {"type": {"state": "in", "shortDetail": "2nd Half"}, "period": 2},
+         "competitions": [{"competitors": [team("Kansas Jayhawks", "KU", 40, False), team("Iowa State Cyclones", "ISU", 38, True)]}]},
+        {"id": "2", "date": "2026-11-07T20:00Z", "status": {"type": {"state": "in"}},
+         "competitions": [{"competitors": [team("Duke Blue Devils", "DUKE", 10, False), team("UNC Tar Heels", "UNC", 8, True)]}]},
+    ]}
+    games = scores.parse_scoreboard("KU/UM Basketball", data)
+    assert [g["id"] for g in games] == ["1"] and games[0]["followed"] == ["ku"]
+    assert len(scores.parse_scoreboard("NBA", data)) == 2
+
+
+def test_boxscore_hot_and_cold():
+    labels = ["MIN", "PTS", "FG", "3PT", "FT", "REB", "AST", "TO", "STL", "BLK", "OREB", "DREB", "PF", "+/-"]
+    hot = ["36", "38", "14-22", "4-8", "6-6", "9", "7", "2", "1", "1", "1", "8", "2", "+12"]
+    cold = ["30", "2", "1-12", "0-5", "0-0", "2", "1", "4", "0", "0", "0", "2", "3", "-14"]
+    summ = {"boxscore": {"players": [{"team": {"abbreviation": "MIA"}, "statistics": [{"labels": labels, "athletes": [
+        {"athlete": {"displayName": "Star Guy"}, "stats": hot}, {"athlete": {"displayName": "Cold Guy"}, "stats": cold}]}]}]}}
+    out = scores.parse_boxscore(summ)
+    tags = {p["name"]: p["tag"] for p in out}
+    assert tags == {"Star Guy": "hot", "Cold Guy": "cold"}
+
+
+def test_events_fire_on_start_and_final():
+    g = {"id": "9", "league": "NBA", "sport": "nba", "state": "post", "period": 4, "detail": "Final", "followed": [],
+         "home": {"abbr": "MIA", "score": 100}, "away": {"abbr": "BOS", "score": 98}}
+    assert [e[0] for e in scores.detect_events([g], {"9": {"state": "in"}})] == ["Final: BOS at MIA"]
+    g["state"] = "in"
+    assert [e[0] for e in scores.detect_events([g], {"9": {"state": "pre"}})][0].startswith("Starting now")
+
+
+def test_injuries_parse():
+    data = {"injuries": [{"displayName": "Miami Heat", "injuries": [
+        {"athlete": {"displayName": "A Player"}, "status": "Out", "shortComment": "Out two weeks",
+         "details": {"type": "Ankle", "returnDate": "2026-11-20"}}]}]}
+    t = injuries.parse(data)
+    assert t[0]["players"][0]["return"] == "2026-11-20" and t[0]["players"][0]["injury"] == "Ankle"
+
+
+def test_news_scoring_clusters_same_story():
+    items = [
+        {"title": "Lakers trade for star guard in blockbuster deal", "source": "ESPN", "published": "2099-01-01T00:00:00+00:00", "engage": 0, "url": "a", "id": "a"},
+        {"title": "Lakers acquire star guard in blockbuster trade deal", "source": "HoopsHype", "published": "2099-01-01T00:00:00+00:00", "engage": 0, "url": "b", "id": "b"},
+        {"title": "Unrelated preseason note about hydration", "source": "RealGM", "published": "2099-01-01T00:00:00+00:00", "engage": 0, "url": "c", "id": "c"},
+    ]
+    out = news.score_items(items)
+    assert out[0]["outlets"] == 2 and out[2]["outlets"] == 1 and out[0]["hot"] > out[2]["hot"]
+
+
+def test_stepien_locks_consecutive_firsts():
+    full = [{"year": y, "round": 1, "from": "own"} for y in range(2027, 2034)]
+    res = picks.evaluate_team(full, 2027)
+    assert len(res["tradable"]) == 7 and not res["locked"]
+    traded_2028 = [p for p in full if p["year"] != 2028]
+    res2 = picks.evaluate_team(traded_2028, 2027)
+    locked = {p["year"]: p["reason"] for p in res2["locked"]}
+    assert locked.get(2027) == "Stepien rule" and locked.get(2029) == "Stepien rule"
+    assert 2031 in {p["year"] for p in res2["tradable"]}
+    beyond = picks.evaluate_team([{"year": 2040, "round": 1, "from": "own"}], 2027)
+    assert beyond["locked"][0]["reason"] == "More than seven drafts away"
+
+
+def test_draft_aggregate_and_youtube_lines():
+    per = {"A": [{"name": "Player One"}, {"name": "Player Two"}], "Cyro Asseo": [{"name": "Player Two"}, {"name": "Player One"}]}
+    board = draft.aggregate(per, {"Cyro Asseo": 1.5}, {"missing_rank": 80, "missing_weight": 0.5, "default_weight": 1.0})
+    assert [e["name"] for e in board] == ["Player Two", "Player One"]
+    m = draft.YT_LINE.match("1. Darryn Peterson - Kansas")
+    assert m and m.group(2) == "Darryn Peterson" and m.group(3) == "Kansas"
+
+
+def test_cap_money_and_table():
+    assert cap.money("$155,300,000") == 155300000 and cap.money("($4,000,000)") == -4000000
+    html = "<table><tr><th>Team</th><th>Total Cap</th></tr>" + "".join(f"<tr><td>T{i}</td><td>$150,000,000</td></tr>" for i in range(30)) + "</table>"
+    assert len(cap.league_table(html)) == 30
+
+
+# ---------- HoopsMatic and workbook imports ----------
+import csv, io  # noqa: E402
+import excel_import, hoopsmatic  # noqa: E402
+
+CONTRACTS = '''PLAYER,,TEAM,RAT 365,2025,CH 24-25,ST 24-25,2026,CH 25-26,ST 25-26,2027,CH 26-27,ST 26-27,2028,CH 27-28,ST 27-28,2029,CH 28-29,ST 28-29,2030,CH 29-30,ST 29-30,2031,CH 30-31,ST 30-31,TOTAL GUARANTEED (with 2024-25),OPTION,END,TOTAL GUARANTEED,LAST SIGNING DATE,SIGNING TEAM,EXCEPTION,OTHER NOTES,TRADE KICKER,LIKELY BONUS,UNLIKELY BONUS,GUARANTEE,% GUARANTEE,YOS,,PLAYER / COACH,AWARD,YEAR,,AWARD,,2031,CH 31-32,ST 31-32
+Jalen Johnson,,Atlanta,17.92,"$4,510,905","$4,510,905",GUARANTEED,"$30,000,000","$30,000,000",GUARANTEED,"$30,000,000","$30,000,000",GUARANTEED,"$30,000,000","$30,000,000",GUARANTEED,"$30,000,000","$30,000,000",GUARANTEED,"$30,000,000","$30,000,000",GUARANTEED,,,,"$154,510,905",,2030,"$120,000,000",10/21/2024,Atlanta,Bird Exception,Rookie Scale Extension,,,,,,5,,Alonzo Mourning,All-Defensive First Team,2000,,All-Defensive First Team
+'''
+
+
+def test_contracts_parse_uses_current_year_columns():
+    rows = list(csv.reader(io.StringIO(CONTRACTS)))
+    out = hoopsmatic.parse_contracts(rows)
+    assert out[0]["name"] == "Jalen Johnson" and out[0]["team"] == "Atlanta"
+    assert out[0]["years"][0] == {"y": "2026-27", "sal": 30000000, "ch": 30000000, "st": "GUARANTEED"}
+    assert out[0]["end"] == "2030" and out[0]["exception"] == "Bird Exception" and out[0]["total"] == 120000000
+
+
+def test_exceptions_parse():
+    text = ',CAP,TAX,MLE TYPE,MLE,,,,,BAE\nAtlanta,"-$30,802,307","$4,664,693",Non-taxpayer,"$944,000",Jock Landale,"$14,100,000",,,"$5,477,000"\n'
+    out = hoopsmatic.parse_exceptions(list(csv.reader(io.StringIO(text))))
+    a = out["Atlanta"]
+    assert a["cap_space"] == -30802307 and a["tax_room"] == 4664693 and a["mle_type"] == "Non-taxpayer"
+    assert a["mle_used_on"] == [{"player": "Jock Landale", "amount": 14100000}] and a["bae"] == 5477000
+
+
+def test_roster_parse_team_block_tpes_and_picks():
+    def row(**cols):
+        r = [""] * 80
+        for k, v in cols.items():
+            r[int(k[1:])] = v
+        return r
+    hdr = [""] * 80
+    r1 = row(c0="Jalen Johnson", c2="Atlanta", c34="Atlanta", c51="$195,763,321", c52="-$30,802,307", c53="$4,664,693", c54="$12,055,431",
+             c55="HC 1st", c56="$24,726,431", c58="BELOW TAX", c60="Philadelphia", c61="07/30/2027", c62="$2,150,917",
+             c64="Atlanta", c65="1st", c66="2027", c68="Own pick", c25="http://x/h.png", c26="SF")
+    out = hoopsmatic.parse_roster([hdr, r1])
+    t = out["teams"]["Atlanta"]
+    assert t["payroll"] == 195763321 and t["cap_space"] == -30802307 and t["second_apron_room"] == 24726431
+    assert out["tpes"] == [{"team": "Philadelphia", "expires": "07/30/2027", "value": 2150917}]
+    assert hoopsmatic.picks_for_rules(out["picks"])["Atlanta"][0] == {"year": 2027, "round": 1, "from": "own", "protection": "Own pick"}
+    assert out["players"]["jalen johnson"]["headshot"] == "http://x/h.png"
+
+
+def test_hoopsmatic_draft_parse_and_staleness():
+    hdr = ["", "AGG RANK", "ESPN", "NBADraft", "CBS Sports", "Athletic", "Bleacher", "Babcock", "The Ringer", "HoopsHQ", "SB Nation", "USAT", "Yahoo!"] + [""] * 34
+    r = ["AJ Dybantsa", "1"] + ["1"] * 10 + ["1/29/2007"] + [""] * 33
+    r2 = [""] * 26 + ["AJ Dybantsa", "1/29/2007", "7234", ".", "United States"] + [""] * 5 + ["SF", "BYU", "YES", "YES"]
+    out = hoopsmatic.parse_draft([hdr, r, r2])
+    p = out["players"][0]
+    assert p["agg"] == 1 and p["ranks"]["ESPN"] == 1 and p["profile"]["school"] == "BYU"
+    # the workbook says this player was drafted in 2026, so a 2027 cycle must treat the board as stale
+    assert draft.hoopsmatic_is_current(out, 2027) is False
+
+
+def test_bio_height_repair():
+    import datetime as dt
+    assert excel_import.height_from_excel(dt.datetime(2026, 6, 9)) == "6-9"
+    assert excel_import.height_from_excel("2026-06-10 00:00:00") == "6-10"

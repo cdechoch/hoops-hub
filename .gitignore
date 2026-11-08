@@ -1,0 +1,4 @@
+__pycache__/
+.pytest_cache/
+web/data/*.json
+web/data/_state/*.json

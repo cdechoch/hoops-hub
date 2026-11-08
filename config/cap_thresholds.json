@@ -1,0 +1,13 @@
+{
+  "season": "2026-27",
+  "source": "https://pr.nba.com/2026-27-salary-cap/",
+  "salary_cap": 164961000,
+  "minimum_team_salary": 148465000,
+  "luxury_tax": 200428000,
+  "first_apron": 209015000,
+  "second_apron": 221686000,
+  "non_taxpayer_mle": 15044000,
+  "taxpayer_mle": 6064000,
+  "room_mle": 9366000,
+  "bae": null
+}

@@ -1,0 +1,68 @@
+name: Refresh and publish
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # GitHub's fastest schedule. Runs can start a few minutes late.
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: "Run every job (live, hourly, daily, weekly)"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: hoops-refresh
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Restore the last published data
+        env:
+          SITE: ${{ vars.SITE_URL }}
+        run: |
+          # Data lives on the published site, so no commits are needed between runs.
+          if [ -n "$SITE" ]; then
+            mkdir -p web/data/_state
+            for f in scores news trends injuries draft rookies leaders teams cap contracts; do
+              curl -fsS "$SITE/data/$f.json" -o "web/data/$f.json" || true
+            done
+            for f in prev_scores seen_news prev_trend draft_ranks salaries roster_flags picks_owned hm_draft; do
+              curl -fsS "$SITE/data/_state/$f.json" -o "web/data/_state/$f.json" || true
+            done
+          fi
+
+      - name: Run data jobs
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          HOOPSMATIC_KEY: ${{ secrets.HOOPSMATIC_KEY }}
+          FORCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.force_all) && 'all' || '' }}
+        run: python pipeline/run_all.py
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deploy
+        uses: actions/deploy-pages@v4

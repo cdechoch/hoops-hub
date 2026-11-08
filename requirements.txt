@@ -1,0 +1,10 @@
+nba_api>=1.5
+pandas>=2.2
+requests>=2.32
+feedparser>=6.0
+beautifulsoup4>=4.12
+lxml>=5.2
+pytrends>=4.9
+scikit-learn>=1.5
+matplotlib>=3.9
+seaborn>=0.13

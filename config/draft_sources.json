@@ -1,0 +1,14 @@
+{
+  "weights": {"Cyro Asseo": 1.5},
+  "default_weight": 1.0,
+  "missing_rank": 80,
+  "missing_weight": 0.5,
+  "sources": [
+    {"name": "Tankathon", "url": "https://www.tankathon.com/big_board"},
+    {"name": "NBADraft.net", "url": "https://www.nbadraft.net/ranking/bigboard/"},
+    {"name": "ESPN", "url": "https://www.espn.com/nba/draft/rankings"},
+    {"name": "Bleacher Report", "url": "https://bleacherreport.com/nba-draft"},
+    {"name": "No Ceilings", "url": "https://www.noceilings.com/nba-draft"}
+  ],
+  "youtube_handle": "cyroasseo"
+}
