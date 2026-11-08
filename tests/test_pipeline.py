@@ -144,3 +144,77 @@ def test_bio_height_repair():
     import datetime as dt
     assert excel_import.height_from_excel(dt.datetime(2026, 6, 9)) == "6-9"
     assert excel_import.height_from_excel("2026-06-10 00:00:00") == "6-10"
+
+
+# ---------- standings, ESPN stats fallback, news summaries, trending fill, draft seed ----------
+import espn_stats, standings, trends  # noqa: E402
+
+
+def test_streak_and_last10_parsing():
+    assert standings.streak_value("W4") == 4 and standings.streak_value("L2") == -2 and standings.streak_value("") == 0
+    assert standings.record_wins("7-3") == 7
+    data = {"children": [{"name": "Eastern Conference", "standings": {"entries": [{"team": {"id": "2", "displayName": "Boston Celtics", "abbreviation": "BOS"},
+            "stats": [{"name": "wins", "displayValue": "11"}, {"name": "losses", "displayValue": "3"}, {"name": "streak", "displayValue": "W5"},
+                      {"name": "lasttengames", "displayName": "Last Ten Games", "displayValue": "8-2"}, {"name": "playoffseed", "displayValue": "1"}]}]}}]}
+    t = standings.parse(data)[0]
+    assert t["conf"] == "Eastern" and t["streak"] == "W5" and t["l10"] == "8-2" and t["seed"] == "1" and t["w"] == "11"
+
+
+def test_form_from_schedule_when_standings_lack_it(monkeypatch):
+    def ev(day, win):
+        return {"date": f"2026-11-{day:02d}T00:00Z", "competitions": [{"status": {"type": {"completed": True}},
+                "competitors": [{"id": "2", "winner": win, "team": {"id": "2"}}, {"id": "9", "winner": not win, "team": {"id": "9"}}]}]}
+    sched = {"events": [ev(d, d != 3) for d in range(1, 8)]}
+    monkeypatch.setattr(standings.c, "get_json", lambda *a, **k: sched)
+    form = standings.form_from_schedule("2")
+    assert form == {"l10": "6-1", "streak": "W4"}
+
+
+def test_espn_player_parse_and_roster():
+    page = {"categories": [{"name": "general", "names": ["gamesPlayed", "avgMinutes", "avgRebounds"]},
+                           {"name": "offensive", "names": ["avgPoints", "avgFieldGoalsMade", "avgFieldGoalsAttempted", "fieldGoalPct", "avgAssists"]}],
+            "athletes": [{"athlete": {"id": "1", "displayName": "Test Guard", "teamShortName": "NYK", "position": {"abbreviation": "PG"}},
+                          "categories": [{"name": "general", "values": [10, 32.5, 4.0]}, {"name": "offensive", "values": [25.1, 9.0, 18.0, 50.0, 7.2]}]}]}
+    per, tot = espn_stats.parse_players([page])
+    assert per[0]["PTS"] == 25.1 and per[0]["FG_PCT"] == 0.5 and per[0]["GP"] == 10 and tot[0]["PTS"] == 251
+    roster = espn_stats.parse_roster({"athletes": [{"id": "1", "displayName": "Test Guard", "position": {"abbreviation": "PG"}, "displayHeight": "6' 3\"",
+                                                    "displayWeight": "195 lbs", "experience": {"years": 0}, "college": {"name": "Kansas"}}]})
+    assert roster[0]["ht"] == "6-3" and roster[0]["wt"] == 195 and roster[0]["rookie"] is True and roster[0]["college"] == "Kansas"
+
+
+def test_team_stats_from_players():
+    import pandas as pd
+    pg = pd.DataFrame([{"PLAYER_ID": 1, "GP": 10, "PTS": 20.0, "REB": 5.0, "AST": 4.0, "STL": 1.0, "BLK": 0.5, "TOV": 2.0, "FGM": 8.0, "FGA": 16.0, "FG3M": 2.0, "FG3A": 5.0, "FTM": 2.0, "FTA": 2.0},
+                       {"PLAYER_ID": 2, "GP": 10, "PTS": 10.0, "REB": 3.0, "AST": 2.0, "STL": 0.5, "BLK": 0.5, "TOV": 1.0, "FGM": 4.0, "FGA": 10.0, "FG3M": 1.0, "FG3A": 3.0, "FTM": 1.0, "FTA": 2.0}])
+    s = espn_stats.team_stats_from_players(pg, {1, 2}, 10)
+    assert s["PTS"] == 30.0 and round(s["FG_PCT"], 3) == round(12 / 26, 3) and s["TOV"] == 3.0
+
+
+def test_news_summary_and_basketball_filter():
+    s = news.first_sentence("<p>The Lakers signed a guard to a two-way deal on Friday. Read more here.</p> The post X appeared first on Y.", "Lakers sign guard")
+    assert s == "The Lakers signed a guard to a two-way deal on Friday."
+    assert news.first_sentence("Lakers sign guard to deal", "Lakers sign guard to deal") == ""  # adds nothing beyond the headline
+    assert news.is_basketball("Knicks beat Celtics in overtime") and not news.is_basketball("Chiefs beat Bills in NFL thriller")
+    assert all(u.startswith("http") for u, _ in news.FEEDS.values()) and len(news.FEEDS) >= 45
+
+
+def test_trending_quiet_hour_is_filled_from_wider_window():
+    import datetime as dt
+    now = c_now = trends.c.now()
+    ents = {"lakers": ("Los Angeles Lakers", "team"), "lebron james": ("LeBron James", "player")}
+    items = [{"title": "Lakers win", "source": "ESPN", "published": (now - dt.timedelta(hours=3)).isoformat(), "engage": 0},
+             {"title": "LeBron James hurt", "source": "HoopsHype", "published": (now - dt.timedelta(minutes=20)).isoformat(), "engage": 0}]
+    keys = sorted(ents, key=len, reverse=True)
+    one = trends.score_window(items, ents, keys, now, 1, [], {})
+    four = trends.score_window(items, ents, keys, now, 4, [], {})
+    assert [r["name"] for r in trends.rows_from(one)] == ["LeBron James"] and len(four) == 2
+    assert all(r["earlier"] for r in trends.rows_from(four, earlier=True))
+
+
+def test_draft_seed_board_builds_without_network():
+    seed = draft.c.read_config("draft_seed.json", {})
+    per = {}
+    profiles = draft.add_seed(per, seed["cycle"])
+    assert len(per) == 6 and profiles["tyran stokes"]["school"] == "Kansas"
+    board = draft.aggregate(per, {}, draft.CFG)
+    assert board[0]["name"] == "Tyran Stokes" and len(board) >= 70

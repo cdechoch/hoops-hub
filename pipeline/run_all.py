@@ -1,6 +1,6 @@
 """Pick which jobs to run for this tick. A GitHub Actions cron fires this every 5 minutes.
 
-live    every tick: scores, news, trends, injuries
+live    every tick: scores, standings, news, trends, injuries
 hourly  at the top of each hour: HoopsMatic contracts and cap sheets, league stats (leaders, rookies, teams)
 daily   09:00 UTC: Spotrac and HoopsHype fallbacks if HoopsMatic is unreachable
 weekly  Monday 09:00 UTC: draft board
@@ -11,7 +11,12 @@ import sys
 import traceback
 
 import common as c
-import scores, news, trends, injuries, league, salaries, cap, draft, hoopsmatic
+import scores, news, trends, injuries, league, salaries, cap, draft, hoopsmatic, standings
+
+
+# A section with no data file yet runs its job right away, so a fresh deploy fills every tab on its first run.
+NEEDS = {"scores": "live", "news": "live", "trends": "live", "injuries": "live", "standings": "live",
+         "leaders": "hourly", "rookies": "hourly", "teams": "hourly", "contracts": "hourly", "cap": "hourly", "draft": "weekly"}
 
 
 def due():
@@ -20,11 +25,14 @@ def due():
     n = c.now()
     top = n.minute < 5
     jobs = {"live"}
-    if forced or "hourly" in manual or top:
+    missing = {job for name, job in NEEDS.items() if not (c.DATA / f"{name}.json").exists()}
+    if missing:
+        print("no data yet for:", sorted(name for name, job in NEEDS.items() if job in missing and not (c.DATA / f"{name}.json").exists()))
+    if forced or "hourly" in manual or top or "hourly" in missing:
         jobs.add("hourly")
     if forced or "daily" in manual or (top and n.hour == 9):
         jobs.add("daily")
-    if forced or "weekly" in manual or (top and n.hour == 9 and n.weekday() == 0):
+    if forced or "weekly" in manual or (top and n.hour == 9 and n.weekday() == 0) or "weekly" in missing:
         jobs.add("weekly")
     jobs.update(manual)
     return jobs
@@ -42,6 +50,7 @@ def main():
     print("jobs:", sorted(jobs))
     if "live" in jobs:
         step(scores.run)
+        step(standings.run)
         step(news.run)
         step(trends.run)
         step(injuries.run)

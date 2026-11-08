@@ -3,6 +3,8 @@ import common as c
 import salaries
 import picks as picks_mod
 import excel_import
+import espn_stats
+import standings as standings_mod
 
 NBA_HEADERS = {
     "Host": "stats.nba.com",
@@ -25,7 +27,7 @@ def player_stats(per_mode, **kw):
     from nba_api.stats.endpoints import leaguedashplayerstats
 
     return leaguedashplayerstats.LeagueDashPlayerStats(
-        season=c.season_string(), per_mode_detailed=per_mode, timeout=60, headers=NBA_HEADERS, **kw
+        season=c.season_string(), per_mode_detailed=per_mode, timeout=25, headers=NBA_HEADERS, **kw
     ).get_data_frames()[0]
 
 
@@ -34,14 +36,14 @@ def team_stats(measure):
 
     return leaguedashteamstats.LeagueDashTeamStats(
         season=c.season_string(), per_mode_detailed="PerGame", measure_type_detailed_defense=measure,
-        timeout=60, headers=NBA_HEADERS,
+        timeout=25, headers=NBA_HEADERS,
     ).get_data_frames()[0]
 
 
 def player_positions():
     from nba_api.stats.endpoints import playerindex
 
-    df = playerindex.PlayerIndex(season=c.season_string(), timeout=60, headers=NBA_HEADERS).get_data_frames()[0]
+    df = playerindex.PlayerIndex(season=c.season_string(), timeout=25, headers=NBA_HEADERS).get_data_frames()[0]
     return {int(r["PERSON_ID"]): str(r["POSITION"] or "") for _, r in df.iterrows()}
 
 
@@ -104,8 +106,9 @@ def build_leaders(pg, tot, positions):
     return {"perGame": per_game, "totals": totals, "top150": ranked, "byPosition": by_pos}
 
 
-def build_rookies():
-    df = player_stats("PerGame", player_experience_nullable="Rookie")
+def build_rookies(df=None):
+    if df is None:
+        df = player_stats("PerGame", player_experience_nullable="Rookie")
     df = df[df["GP"] > 0].copy()
     if df.empty:
         return {"players": [], "top15": []}
@@ -122,35 +125,6 @@ def build_rookies():
     }
 
 
-def espn_standings():
-    data = c.get_json("https://site.api.espn.com/apis/v2/sports/basketball/nba/standings")
-    out = []
-    for conf in (data or {}).get("children", []):
-        for e in conf.get("standings", {}).get("entries", []):
-            stats = {}
-            for s in e.get("stats", []):
-                for k in (s.get("name"), s.get("shortDisplayName"), s.get("displayName")):
-                    if k:
-                        stats[str(k).lower()] = s.get("displayValue", "")
-            t = e.get("team", {})
-            logo = (t.get("logos") or [{}])[0].get("href", "")
-            out.append(
-                {
-                    "name": t.get("displayName", ""), "abbr": t.get("abbreviation", ""), "logo": logo,
-                    "conf": conf.get("name", ""),
-                    "w": stats.get("wins", stats.get("w", "")), "l": stats.get("losses", stats.get("l", "")),
-                    "pct": stats.get("winpercent", stats.get("pct", "")),
-                    "gb": stats.get("gamesbehind", stats.get("gb", "")),
-                    "seed": stats.get("playoffseed", stats.get("seed", "")),
-                    "streak": stats.get("streak", stats.get("strk", "")),
-                    "home": stats.get("home", ""), "away": stats.get("road", stats.get("away", "")),
-                    "l10": stats.get("last ten games", stats.get("l10", "")),
-                    "diff": stats.get("differential", stats.get("diff", "")),
-                }
-            )
-    return out
-
-
 def nick(name):
     return (name or "").split()[-1].lower()
 
@@ -165,7 +139,7 @@ def rank_cols(df, cols, ascending=()):
 
 def build_teams(pg, positions_by_id=None):
     positions_by_id = positions_by_id or {}
-    standings = espn_standings()
+    standings = standings_mod.sort_seed(standings_mod.build())
     base = team_stats("Base")
     opp = team_stats("Opponent")
     base_cols = ["PTS", "REB", "AST", "STL", "BLK", "TOV", "FG_PCT", "FG3_PCT", "FT_PCT"]
@@ -209,19 +183,98 @@ def build_teams(pg, positions_by_id=None):
     return teams
 
 
+def player_entry(r, positions_by_id, ctx, info=None):
+    d = slim(r)
+    k = c.norm_name(r["PLAYER_NAME"])
+    sal, bio, flags, contract_info = ctx
+    info = info or {}
+    d["salary"] = sal.get(k)
+    b = bio.get(k, {})
+    d["ht"] = info.get("ht") or b.get("ht")
+    d["wt"] = info.get("wt") or b.get("wt")
+    d["college"] = info.get("college") or b.get("college")
+    d["pos"] = positions_by_id.get(int(r["PLAYER_ID"])) or b.get("pos") or flags.get(k, {}).get("pos", "")
+    ci = contract_info.get(k)
+    if ci:
+        d["contract_end"], d["option"] = ci["end"], ci["option"]
+    head = flags.get(k, {}).get("headshot") or info.get("headshot")
+    if head:
+        d["headshot"] = head
+    return d
+
+
+def build_teams_espn(pg, standings, rosters):
+    """Team pages when stats.nba.com is blocked. Team stats are summed from player stats."""
+    ctx = (salaries.load(), excel_import.load_bio(), c.read_state("roster_flags", {}),
+           {c.norm_name(p["name"]): p for p in c.read_data("contracts", {"players": []})["players"]})
+    tradable = picks_mod.load_and_evaluate()
+    base_cols = ["PTS", "REB", "AST", "STL", "BLK", "TOV", "FG_PCT", "FG3_PCT", "FT_PCT"]
+    raw = {}
+    for s in standings:
+        ids = {p["id"] for p in rosters.get(s["id"], []) if p["id"]}
+        games = int(s["w"] or 0) + int(s["l"] or 0)
+        raw[s["id"]] = espn_stats.team_stats_from_players(pg, ids, games)
+    have = {k: v for k, v in raw.items() if v}
+    ranks = {}
+    for col in base_cols:
+        ordered = sorted(have, key=lambda k: have[k][col], reverse=(col != "TOV"))
+        for i, k in enumerate(ordered, 1):
+            ranks.setdefault(k, {})[col] = i
+    opp_vals = {s["id"]: float(s["oppg"]) for s in standings if str(s["oppg"]).replace(".", "", 1).isdigit()}
+    opp_order = sorted(opp_vals, key=lambda k: opp_vals[k])
+    teams = []
+    for s in standings:
+        info = {p["id"]: p for p in rosters.get(s["id"], []) if p["id"]}
+        positions = {pid: p["pos"] for pid, p in info.items() if p["pos"]}
+        stats = {k: {"v": round(v * (100 if k.endswith("PCT") else 1), 1), "r": ranks[s["id"]][k]} for k, v in raw.get(s["id"], {}).items()}
+        ostats = {}
+        if s["id"] in opp_vals:
+            ostats["OPP_PTS"] = {"v": round(opp_vals[s["id"]], 1), "r": opp_order.index(s["id"]) + 1}
+        rows = pg[pg["PLAYER_ID"].isin(list(info))].sort_values("PTS", ascending=False)
+        roster = [player_entry(r, positions, ctx, info.get(int(r["PLAYER_ID"]))) for _, r in rows.iterrows()]
+        teams.append(dict(s, stats=stats, opp=ostats, players=roster, picks=tradable.get(s["name"], {"tradable": [], "locked": []})))
+    teams.sort(key=lambda t: (t["conf"], int(t["seed"]) if str(t["seed"]).isdigit() else 99))
+    return teams
+
+
+def run_espn():
+    """Fallback path through ESPN."""
+    standings = standings_mod.sort_seed(standings_mod.build())
+    pg, tot = espn_stats.fetch_players(c.season_end_year())
+    rosters = espn_stats.fetch_rosters([s["id"] for s in standings if s["id"]])
+    positions, rookie_ids = {}, set()
+    for plist in rosters.values():
+        for p in plist:
+            if p["id"]:
+                if p["pos"]:
+                    positions[p["id"]] = p["pos"]
+                if p["rookie"]:
+                    rookie_ids.add(p["id"])
+    for _, r in pg.iterrows():
+        positions.setdefault(int(r["PLAYER_ID"]), r.get("POS", ""))
+    c.write_data("leaders", build_leaders(pg, tot, positions))
+    c.write_data("rookies", build_rookies(pg[pg["PLAYER_ID"].isin(rookie_ids)]))
+    if standings:
+        c.write_data("teams", {"teams": build_teams_espn(pg, standings, rosters), "source": "ESPN"})
+
+
 def run():
     try:
         pg = player_stats("PerGame")
         tot = player_stats("Totals")
         positions = player_positions()
-    except Exception as exc:  # stats.nba.com often blocks cloud IPs
-        print("stats.nba.com unavailable:", exc)
+    except Exception as exc:  # stats.nba.com often blocks cloud IPs, so use ESPN
+        print("stats.nba.com unavailable, using ESPN:", exc)
+        try:
+            run_espn()
+        except Exception as exc2:
+            print("ESPN stats also failed:", exc2)
         return
     leaders = build_leaders(pg, tot, positions)
     c.write_data("leaders", leaders)
     c.write_data("rookies", build_rookies())
     try:
-        c.write_data("teams", {"teams": build_teams(pg, positions)})
+        c.write_data("teams", {"teams": build_teams(pg, positions), "source": "NBA.com"})
     except Exception as exc:
         print("team build failed:", exc)
 

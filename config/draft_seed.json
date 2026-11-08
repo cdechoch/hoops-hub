@@ -1,0 +1,659 @@
+{
+ "date": "2026-11-08",
+ "cycle": 2027,
+ "sources": {
+  "ESPN": [
+   "Tyran Stokes",
+   "Jordan Smith Jr.",
+   "Caleb Holt",
+   "Bruce Branch III",
+   "Stefan Joksimovic",
+   "Braylon Mullins",
+   "Thomas Haugh",
+   "Jason Crowe Jr.",
+   "Anthony Thompson",
+   "Cameron Williams",
+   "Caleb Gaskins",
+   "Miikka Muurinen",
+   "Austin Goosby",
+   "Motiejus Krivas",
+   "Luigi Suigo",
+   "Matt Able",
+   "Alex Condon",
+   "Dame Sarr",
+   "Cameron Houindo",
+   "Christian Collins",
+   "Babatunde Oladotun",
+   "Jaxon Richardson",
+   "Brandon McCoy",
+   "Hugo Yimga-Moukouri",
+   "Sayon Keita",
+   "Amari Allen",
+   "Ivan Kharchenkov",
+   "Patrick Ngongba II",
+   "Juke Harris",
+   "Tyler Tanner",
+   "Malachi Moreno",
+   "Cheickh Niang",
+   "Colben Landrew",
+   "Obinna Ekezie Jr.",
+   "Trey McKenney Jr.",
+   "Quentin Coleman",
+   "Dylan Mingo",
+   "Stefan Vaaks",
+   "Milan Momcilovic",
+   "Dash Daniels",
+   "Massamba Diop",
+   "Tounde Yessoufou",
+   "Moustapha Thiam",
+   "David Mirkovic",
+   "Miles Byrd",
+   "Joseph Tugler",
+   "Flory Bidunga",
+   "Shelton Henderson",
+   "Davis Fogle",
+   "Jacob Cofie",
+   "Rueben Chinyelu",
+   "Billy Richmond III",
+   "Neoklis Avdalas",
+   "Sam Lewis",
+   "Pryce Sandfort",
+   "Matas Vokietaitis",
+   "Andrej Stojakovic",
+   "Jeremy Fears Jr.",
+   "Killyan Toure",
+   "John Blackwell"
+  ],
+  "CBS Sports": [
+   "Tyran Stokes",
+   "Jordan Smith Jr.",
+   "Stefan Joksimovic",
+   "Caleb Holt",
+   "Bruce Branch III",
+   "Amari Allen",
+   "Motiejus Krivas",
+   "Braylon Mullins",
+   "Patrick Ngongba II",
+   "Thomas Haugh",
+   "Ivan Kharchenkov",
+   "Alijah Arenas",
+   "Dame Sarr",
+   "Arafan Diane",
+   "Quentin Coleman",
+   "Luigi Suigo",
+   "Cameron Williams",
+   "Davis Fogle",
+   "David Mirkovic",
+   "Jason Crowe Jr.",
+   "Billy Richmond III",
+   "Malachi Moreno",
+   "Anthony Thompson",
+   "Matt Able",
+   "Dash Daniels",
+   "Neoklis Avdalas",
+   "JJ Andrews",
+   "Matas Vokietaitis",
+   "Rueben Chinyelu",
+   "Tounde Yessoufou"
+  ],
+  "Sports Illustrated": [
+   "Tyran Stokes",
+   "Caleb Holt",
+   "Stefan Joksimovic",
+   "Bruce Branch III",
+   "Anthony Thompson",
+   "Jordan Smith Jr.",
+   "Jason Crowe Jr.",
+   "Colben Landrew",
+   "Austin Goosby",
+   "Braylon Mullins",
+   "JJ Andrews",
+   "Thomas Haugh",
+   "Matt Able",
+   "Quentin Coleman",
+   "Amari Allen",
+   "Cameron Williams",
+   "Obinna Ekezie Jr.",
+   "Motiejus Krivas",
+   "Dylan Mingo",
+   "Tounde Yessoufou",
+   "Ivan Kharchenkov",
+   "Najai Hines",
+   "Alex Condon",
+   "Luigi Suigo",
+   "David Mirkovic",
+   "DaKari Spear",
+   "Malachi Moreno",
+   "Stefan Vaaks",
+   "Alijah Arenas",
+   "Miikka Muurinen"
+  ],
+  "Yahoo Sports": [
+   "Tyran Stokes",
+   "Jordan Smith Jr.",
+   "Caleb Holt",
+   "Stefan Joksimovic",
+   "Bruce Branch III",
+   "Thomas Haugh",
+   "Amari Allen",
+   "Braylon Mullins",
+   "Alijah Arenas",
+   "Anthony Thompson",
+   "Luigi Suigo",
+   "Motiejus Krivas",
+   "Flory Bidunga",
+   "Patrick Ngongba II",
+   "Billy Richmond III",
+   "Rueben Chinyelu",
+   "Juke Harris",
+   "Tounde Yessoufou",
+   "Malachi Moreno",
+   "Matt Able",
+   "Alex Condon",
+   "Tyler Tanner",
+   "Milan Momcilovic",
+   "Cameron Williams",
+   "Miikka Muurinen",
+   "Deron Rippey Jr.",
+   "Jamarion Batemon",
+   "Nik Khamenia",
+   "Babatunde Oladotun",
+   "Taylen Kinney"
+  ],
+  "Bleacher Report": [
+   "Tyran Stokes",
+   "Caleb Holt",
+   "Jordan Smith Jr.",
+   "Stefan Joksimovic",
+   "Braylon Mullins",
+   "Bruce Branch III",
+   "Motiejus Krivas",
+   "Patrick Ngongba II",
+   "Colben Landrew",
+   "Dylan Mingo",
+   "Amari Allen",
+   "Babatunde Oladotun",
+   "Thomas Haugh",
+   "Brandon McCoy",
+   "Hugo Yimga-Moukouri",
+   "Luigi Suigo",
+   "JJ Andrews",
+   "Quentin Coleman",
+   "Bryson Howard",
+   "Anthony Thompson",
+   "Alijah Arenas",
+   "Abdou Toure",
+   "Caleb Gaskins",
+   "Tounde Yessoufou",
+   "Billy Richmond III",
+   "Tyler Tanner",
+   "Nigel James",
+   "Davis Fogle",
+   "Ivan Kharchenkov",
+   "Malachi Moreno"
+  ],
+  "FanSided": [
+   "Tyran Stokes",
+   "Stefan Joksimovic",
+   "Caleb Holt",
+   "Jordan Smith Jr.",
+   "Patrick Ngongba II",
+   "Quentin Coleman",
+   "Brandon McCoy",
+   "Colben Landrew",
+   "Bruce Branch III",
+   "Motiejus Krivas",
+   "David Mirkovic",
+   "Anthony Thompson",
+   "Malachi Moreno",
+   "Ivan Kharchenkov",
+   "Abdou Toure",
+   "Braylon Mullins",
+   "Thomas Haugh",
+   "Tyler Tanner",
+   "Najai Hines",
+   "Bryson Howard",
+   "Dylan Mingo",
+   "Arafan Diane",
+   "Maximo Adams",
+   "Matt Able",
+   "Amari Allen",
+   "Rueben Chinyelu",
+   "Hugo Yimga-Moukouri",
+   "Pryce Sandfort",
+   "Dash Daniels",
+   "Matas Vokietaitis"
+  ]
+ },
+ "profiles": {
+  "Tyran Stokes": {
+   "pos": "SF",
+   "school": "Kansas",
+   "class": "Freshman",
+   "height": "6-7",
+   "note": "Consensus No. 1. Size, vision and passing set him apart. Shooting, turnovers and consistency are the open questions."
+  },
+  "Jordan Smith Jr.": {
+   "pos": "PG/SG",
+   "school": "Arkansas",
+   "class": "Freshman",
+   "height": "6-2",
+   "note": "Explosive, competitive guard and a strong rebounder for his size. Needs to shoot and run an offense better."
+  },
+  "Caleb Holt": {
+   "pos": "SG/PG",
+   "school": "Arizona",
+   "class": "Freshman",
+   "height": "6-5",
+   "note": "Physical, high floor combo guard who can guard several positions. Shot creation is improving."
+  },
+  "Bruce Branch III": {
+   "pos": "SG/SF",
+   "school": "BYU",
+   "class": "Freshman",
+   "height": "6-7",
+   "wingspan": "7-1",
+   "note": "Prototype wing size with a good shooting profile. Scouts want more assertiveness on offense."
+  },
+  "Stefan Joksimovic": {
+   "pos": "PG",
+   "school": "Baskonia (Spain)",
+   "class": "International",
+   "height": "6-7",
+   "note": "Slovenian creator who skipped college. Passing and ball handling stand out. Shooting and defense need to show up."
+  },
+  "Braylon Mullins": {
+   "pos": "SG",
+   "school": "UConn",
+   "class": "Sophomore",
+   "height": "6-6",
+   "note": "One of the best shooters in the class. Teams want proof he can do more than shoot."
+  },
+  "Thomas Haugh": {
+   "pos": "SF/PF",
+   "school": "Florida",
+   "class": "Senior",
+   "height": "6-9",
+   "note": "Versatile, high motor forward who returned to school. Will be 24 as a rookie. Three point shot is the swing skill."
+  },
+  "Jason Crowe Jr.": {
+   "pos": "PG/SG",
+   "school": "Missouri",
+   "class": "Freshman",
+   "height": "6-3",
+   "note": "Gifted scorer who can create his own shot. Passing, defense and shot selection get questions."
+  },
+  "Anthony Thompson": {
+   "pos": "SF/PF",
+   "school": "Ohio State",
+   "class": "Freshman",
+   "height": "6-9",
+   "wingspan": "7-3",
+   "note": "Lefty with length and shooting touch. Motor and consistency are the concerns."
+  },
+  "Cameron Williams": {
+   "pos": "F/C",
+   "school": "Duke",
+   "class": "Freshman",
+   "height": "6-11",
+   "note": "Former top five recruit who runs and stretches the floor. Needs strength, and his role at Duke is not clear yet."
+  },
+  "Motiejus Krivas": {
+   "pos": "C",
+   "school": "Arizona",
+   "class": "Senior",
+   "height": "7-3",
+   "note": "Huge rim protector, seen as the most NBA ready college center. A bigger offensive role could lift him."
+  },
+  "Colben Landrew": {
+   "pos": "SF",
+   "school": "UConn",
+   "class": "Freshman",
+   "note": "Connective wing who creates for others and defends multiple spots."
+  },
+  "Luigi Suigo": {
+   "pos": "C",
+   "school": "Villanova",
+   "height": "7-3",
+   "note": "Italian big with length and a mix of spacing and rim protection. Stayed out of the 2026 draft."
+  },
+  "Amari Allen": {
+   "pos": "SF",
+   "school": "Alabama",
+   "class": "Sophomore",
+   "note": "Returned to school and will handle the ball more, which could raise his stock."
+  },
+  "Patrick Ngongba II": {
+   "pos": "C",
+   "school": "Duke",
+   "class": "Sophomore",
+   "note": "Long, broad big who spaces the floor, passes and protects the rim. Health is the key."
+  },
+  "Quentin Coleman": {
+   "pos": "SG",
+   "school": "Illinois",
+   "class": "Freshman",
+   "note": "Skilled shooter with great feel. Scouts compare him to Keaton Wagler."
+  },
+  "Alijah Arenas": {
+   "pos": "SG",
+   "school": "USC",
+   "class": "Sophomore",
+   "wingspan": "7-0",
+   "note": "Polarizing wildcard with size and scoring tools, coming off a knee injury."
+  },
+  "Ivan Kharchenkov": {
+   "pos": "SF",
+   "school": "Arizona",
+   "class": "Sophomore",
+   "note": "Elite defender and glue player. Offense needs to catch up for him to reach the lottery."
+  },
+  "Dame Sarr": {
+   "pos": "SF",
+   "school": "Duke",
+   "class": "Sophomore",
+   "note": "Defensive standout with wing size who shot poorly as a freshman."
+  },
+  "Matt Able": {
+   "pos": "SG",
+   "school": "North Carolina",
+   "class": "Sophomore",
+   "note": "Scoring guard with good size who transferred to UNC and should be its centerpiece."
+  },
+  "David Mirkovic": {
+   "pos": "PF",
+   "school": "Illinois",
+   "class": "Sophomore",
+   "height": "6-9",
+   "note": "Skilled, cerebral forward expected to be one of the best players in college. Mobility on defense is a question."
+  },
+  "Tyler Tanner": {
+   "pos": "PG",
+   "school": "Vanderbilt",
+   "class": "Junior",
+   "height": "6-0",
+   "note": "Prolific scorer and passer whose 6-0, 175 pound frame raises size questions."
+  },
+  "Dylan Mingo": {
+   "pos": "PG",
+   "school": "Baylor",
+   "class": "Freshman",
+   "note": "Productive when healthy. Must prove he can shoot and run a team."
+  },
+  "Malachi Moreno": {
+   "pos": "C",
+   "school": "Kentucky",
+   "class": "Sophomore",
+   "note": "Mobile big with soft hands and high basketball IQ who returned to school."
+  },
+  "JJ Andrews": {
+   "pos": "SF",
+   "school": "Arkansas",
+   "class": "Freshman",
+   "height": "6-7",
+   "note": "Powerful, long athlete with scoring instincts who needs a better perimeter shot."
+  },
+  "Billy Richmond III": {
+   "pos": "SG/SF",
+   "school": "Arkansas",
+   "class": "Junior",
+   "height": "6-7",
+   "note": "Explosive athlete and defender whose jumper is improving."
+  },
+  "Tounde Yessoufou": {
+   "pos": "SG/SF",
+   "school": "St. John's",
+   "class": "Sophomore",
+   "note": "Power wing who transferred from Baylor and wants to show more skill and defensive upside."
+  },
+  "Rueben Chinyelu": {
+   "pos": "C",
+   "school": "Florida",
+   "class": "Senior",
+   "wingspan": "7-8",
+   "note": "Strong defender and rebounder with a huge wingspan. Offense is the area to grow."
+  },
+  "Alex Condon": {
+   "pos": "PF/C",
+   "school": "Florida",
+   "class": "Senior",
+   "height": "7-0",
+   "note": "Mobile Australian seven footer whose three point shooting dipped last season."
+  },
+  "Miikka Muurinen": {
+   "pos": "PF",
+   "school": "Arkansas",
+   "class": "Freshman",
+   "height": "6-11",
+   "note": "Mobile, shooting big with clean mechanics. Questions on coachability and consistency."
+  },
+  "Babatunde Oladotun": {
+   "pos": "SF",
+   "school": "Maryland",
+   "class": "Freshman",
+   "height": "6-10",
+   "note": "Former No. 1 recruit and high upside wing who needs to get stronger."
+  },
+  "Davis Fogle": {
+   "pos": "SG",
+   "school": "Gonzaga",
+   "class": "Sophomore",
+   "note": "Breakout candidate and jumbo initiator. Needs to hold up his shooting and defense."
+  },
+  "Dash Daniels": {
+   "pos": "PG/SG",
+   "school": "Melbourne United (Australia)",
+   "class": "International",
+   "note": "Younger brother of Dyson Daniels and a defense first guard with early offensive progress."
+  },
+  "Neoklis Avdalas": {
+   "pos": "SF",
+   "school": "North Carolina",
+   "class": "Sophomore",
+   "note": "Advanced passer who can start the offense as a big wing."
+  },
+  "Matas Vokietaitis": {
+   "pos": "C",
+   "school": "Texas",
+   "class": "Junior",
+   "height": "7-0",
+   "note": "Seven footer with good hands and feet who handles the ball and rebounds."
+  },
+  "Austin Goosby": {
+   "pos": "PG/SG",
+   "school": "Texas",
+   "class": "Freshman",
+   "note": "Versatile guard with good size and feel who shot well in high school."
+  },
+  "Obinna Ekezie Jr.": {
+   "pos": "C",
+   "school": "Louisville",
+   "class": "Freshman",
+   "height": "7-0",
+   "note": "Reclassified seven footer with elite rim protection upside who is still raw."
+  },
+  "Najai Hines": {
+   "pos": "C",
+   "school": "UConn",
+   "class": "Freshman",
+   "note": "Reclassified big with strong rebounding and shot blocking numbers."
+  },
+  "Arafan Diane": {
+   "pos": "C",
+   "school": "Houston",
+   "class": "Freshman",
+   "note": "Top natural big man talent who needs conditioning to maximize his tools."
+  },
+  "Caleb Gaskins": {
+   "pos": "PF",
+   "school": "Miami",
+   "class": "Freshman",
+   "note": "Hurricanes freshman forward on the ESPN board."
+  },
+  "Shelton Henderson": {
+   "pos": "SG",
+   "school": "Miami",
+   "class": "Sophomore",
+   "note": "Hurricanes guard on the ESPN board."
+  },
+  "Juke Harris": {
+   "pos": "SG/SF",
+   "school": "Tennessee",
+   "class": "Sophomore",
+   "note": "Former ACC Most Improved Player who transferred to Tennessee."
+  },
+  "Flory Bidunga": {
+   "pos": "C",
+   "school": "Louisville",
+   "class": "Junior",
+   "height": "6-9",
+   "note": "Defense first interior player who transferred from Kansas."
+  },
+  "Milan Momcilovic": {
+   "pos": "PF",
+   "school": "Kentucky",
+   "class": "Senior",
+   "height": "6-9",
+   "note": "Shooter with limited mobility, especially on defense."
+  },
+  "Taylen Kinney": {
+   "pos": "PG",
+   "school": "Kansas",
+   "class": "Freshman",
+   "height": "6-3",
+   "note": "Scoring point guard playing next to Tyran Stokes at Kansas."
+  },
+  "Cameron Houindo": {
+   "pos": "PF",
+   "school": "Cedevita (France)",
+   "class": "International"
+  },
+  "Christian Collins": {
+   "pos": "SF",
+   "school": "USC",
+   "class": "Freshman"
+  },
+  "Jaxon Richardson": {
+   "pos": "SF",
+   "school": "Alabama",
+   "class": "Freshman"
+  },
+  "Brandon McCoy": {
+   "pos": "SG",
+   "school": "Michigan",
+   "class": "Freshman"
+  },
+  "Hugo Yimga-Moukouri": {
+   "pos": "SF",
+   "school": "Nanterre (France)",
+   "class": "International"
+  },
+  "Sayon Keita": {
+   "pos": "C",
+   "school": "North Carolina",
+   "class": "Freshman"
+  },
+  "Cheickh Niang": {
+   "pos": "SG",
+   "school": "Trento (Italy)",
+   "class": "International"
+  },
+  "Trey McKenney Jr.": {
+   "pos": "SG",
+   "school": "Michigan",
+   "class": "Sophomore"
+  },
+  "Stefan Vaaks": {
+   "pos": "SG/PG",
+   "school": "Illinois",
+   "class": "Sophomore"
+  },
+  "Massamba Diop": {
+   "pos": "C",
+   "school": "Gonzaga",
+   "class": "Sophomore"
+  },
+  "Moustapha Thiam": {
+   "pos": "C",
+   "school": "Michigan",
+   "class": "Junior"
+  },
+  "Miles Byrd": {
+   "pos": "SG",
+   "school": "Providence",
+   "class": "Senior"
+  },
+  "Joseph Tugler": {
+   "pos": "PF",
+   "school": "Houston",
+   "class": "Senior"
+  },
+  "Jacob Cofie": {
+   "pos": "SF/PF",
+   "school": "USC",
+   "class": "Sophomore"
+  },
+  "Sam Lewis": {
+   "pos": "SG",
+   "school": "Virginia",
+   "class": "Senior"
+  },
+  "Pryce Sandfort": {
+   "pos": "SF",
+   "school": "Nebraska",
+   "class": "Senior"
+  },
+  "Andrej Stojakovic": {
+   "pos": "SG",
+   "school": "Illinois",
+   "class": "Senior"
+  },
+  "Jeremy Fears Jr.": {
+   "pos": "PG",
+   "school": "Michigan State",
+   "class": "Junior"
+  },
+  "Killyan Toure": {
+   "pos": "SG/PG",
+   "school": "Iowa State",
+   "class": "Sophomore"
+  },
+  "John Blackwell": {
+   "pos": "SG",
+   "school": "Duke",
+   "class": "Senior"
+  },
+  "DaKari Spear": {
+   "pos": "SG/SF",
+   "school": "Texas Tech"
+  },
+  "Bryson Howard": {
+   "pos": "SG/SF",
+   "school": "Duke"
+  },
+  "Abdou Toure": {
+   "pos": "SG/SF",
+   "school": "Arkansas"
+  },
+  "Nigel James": {
+   "pos": "PG",
+   "school": "Marquette"
+  },
+  "Maximo Adams": {
+   "pos": "SF",
+   "school": "North Carolina"
+  },
+  "Deron Rippey Jr.": {
+   "pos": "PG",
+   "school": "Duke"
+  },
+  "Jamarion Batemon": {
+   "pos": "SG",
+   "school": "Iowa State"
+  },
+  "Nik Khamenia": {
+   "pos": "G/F",
+   "school": "UConn"
+  }
+ }
+}

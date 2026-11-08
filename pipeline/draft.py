@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 
 import common as c
 import excel_import
+import espn_stats
 
 CFG = c.read_config("draft_sources.json", {})
 PROFILE_FIELDS = {
@@ -145,6 +146,42 @@ def hoopsmatic_is_current(hm, cycle):
     return drafted <= len(top) // 4
 
 
+def college_stats():
+    """Current college per game stats by player name, from ESPN. Keeps last week's copy if ESPN fails."""
+    try:
+        pg, _ = espn_stats.fetch_players(c.season_end_year(), league="mens-college-basketball", max_pages=3)
+        out = {}
+        for _, r in pg.iterrows():
+            key = c.norm_name(r["PLAYER_NAME"])
+            if key in out and out[key]["gp"] >= int(r["GP"]):
+                continue
+            out[key] = {"gp": int(r["GP"]), "min": round(float(r["MIN"]), 1), "pts": round(float(r["PTS"]), 1),
+                        "reb": round(float(r["REB"]), 1), "ast": round(float(r["AST"]), 1), "stl": round(float(r["STL"]), 1),
+                        "blk": round(float(r["BLK"]), 1), "fg": round(float(r["FG_PCT"]) * 100, 1),
+                        "tp": round(float(r["FG3_PCT"]) * 100, 1), "ft": round(float(r["FT_PCT"]) * 100, 1)}
+        if out:
+            c.write_state("college_stats", out)
+            return out
+    except Exception as exc:
+        print("college stats unavailable:", exc)
+    return c.read_state("college_stats", {})
+
+
+def add_seed(per_source, cycle):
+    """Starting board compiled from published mocks. Live sources replace it as they come in."""
+    seed = c.read_config("draft_seed.json", {})
+    if seed.get("cycle") != cycle:
+        return {}
+    stamp = c.parse_iso(seed.get("date", "") + "T00:00:00+00:00")
+    age = (c.now() - stamp).days if stamp else 999
+    live = len(per_source)
+    for src, names in seed.get("sources", {}).items():
+        if src in per_source or (live >= 3 and age > 28):
+            continue
+        per_source[src] = [{"name": n} for n in names]
+    return {c.norm_name(k): v for k, v in seed.get("profiles", {}).items()}
+
+
 def run():
     cycle = c.draft_cycle_year()
     per_source, hm_profiles = {}, {}
@@ -168,6 +205,7 @@ def run():
         yt = [{k: v for k, v in r.items() if v} for r in csv.DictReader(manual_cyro.open())]
     if yt:
         per_source["Cyro Asseo"] = yt
+    seed_profiles = add_seed(per_source, cycle)
     if not per_source:
         print("No draft sources returned data")
         return
@@ -189,6 +227,7 @@ def run():
     combine = excel_import.load_combine()
     bio = excel_import.load_bio()
     news = c.read_data("news", {"items": []})["items"]
+    college = college_stats()
     players = []
     for i, e in enumerate(board, 1):
         pr = dict(e["profile"])
@@ -203,6 +242,12 @@ def run():
         cb = combine.get(e["key"])
         if cb:
             pr["combine"] = {k: v for k, v in cb.items() if k in ("year", "height_bare", "wingspan", "reach", "weight", "standing_vert", "max_vert", "lane", "sprint")}
+        for k in ("pos", "school", "class", "height", "wingspan", "note"):
+            v = seed_profiles.get(e["key"], {}).get(k)
+            if v and k not in e["profile"]:
+                pr[k] = v
+        if college.get(e["key"]):
+            pr["stats"] = college[e["key"]]
         pr.update(profiles.get(e["key"], {}))
         intel = [
             {"title": n["title"], "url": n["url"], "source": n["source"]}

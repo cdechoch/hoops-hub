@@ -10,13 +10,22 @@ A phone app (installable web app) for live NBA scores, Kansas and Miami games, n
 
 | Job | When | Sections |
 | --- | --- | --- |
-| live | every 5 minutes | scores, hot and cold players, news, trends, injuries |
-| hourly | top of each hour | leaders, rookies, top 150, teams, standings, salaries on team pages |
+| live | every 5 minutes | scores, standings with streaks and last 10, hot and cold players, news (50+ feeds), trends, injuries |
+| hourly | top of each hour | leaders, rookies, top 150, teams, salaries on team pages (stats.nba.com first, ESPN if it is blocked) |
 | hourly | top of each hour | HoopsMatic contracts, cap sheets, exceptions, picks |
 | daily | 09:00 UTC | HoopsHype and Spotrac fallbacks if HoopsMatic is unreachable |
 | weekly | Monday 09:00 UTC | draft board with last week's rank for movement |
 
+A section with no data yet runs its job on the next tick, so a fresh deploy fills every tab on its first run. The app also keeps the last data it saw and paints it the moment you open it, then swaps in fresh data.
+
 The draft year and rookie class roll forward on their own. The draft cycle switches on July 10, two weeks after a late June draft.
+
+## The draft board
+
+- `config/draft_seed.json` is the starting board, compiled on 2026-11-08 from published 2027 mocks and big boards (ESPN, CBS Sports, Sports Illustrated, Yahoo Sports, Bleacher Report, FanSided). `web/seed/draft.json` is the same board already built, so the Draft tab is full even before the first run.
+- Every Monday the pipeline reads Tankathon, NBADraft.net, ESPN, Bleacher Report, No Ceilings and your YouTube mocks, then rebuilds the board. The seed sources stay in the average for four weeks, then drop out once at least three live sources are working.
+- To refresh the starting board by hand, edit `scripts/make_draft_seed.py` and run `python scripts/make_draft_seed.py`.
+- College stats for prospects come from ESPN each Monday. International prospects have no stat line.
 
 ## Data from HoopsMatic and the HoopsHype workbook
 
@@ -54,13 +63,17 @@ Cloudflare Pages also works: point it at the `web` folder. The workflow publishe
 
 ## Known limits
 
+- Leaders, rookies and team pages use NBA.com data when it answers and ESPN when it does not. On the ESPN path, team stats are added up from player stats and only points allowed is shown for opponents.
 - GitHub's fastest schedule is 5 minutes, so "every minute" is not possible on this setup. The app itself checks for new data every minute. For true one-minute polling, run `python pipeline/run_all.py` in a loop on a server.
 - X and TikTok have no free public data. Trends use headlines, Reddit and Google Trends.
-- stats.nba.com sometimes blocks GitHub's servers. If leaders, rookies or teams stay empty, run `JOBS=hourly python pipeline/run_all.py` from your own computer.
 - Trade exceptions show the holder, size and expiry. HoopsMatic's file does not say which trade created each one.
-- The HoopsMatic parsers were checked against real sample rows, but the full files could not be downloaded in the build sandbox. The HoopsHype, Spotrac, Tankathon, NBADraft.net, ESPN, Bleacher Report and No Ceilings parsers read public pages and have not been run against the live sites yet. Check the first run's log and use the manual files above if a source returns nothing.
+- The HoopsMatic parsers were checked against real sample rows, but the full files could not be downloaded in the build sandbox. The ESPN stats and standings parsers, the news feeds, and the HoopsHype, Spotrac, Tankathon, NBADraft.net, Bleacher Report and No Ceilings parsers read public pages and have not been run against the live sites yet. Check the first run's log and use the manual files above if a source returns nothing.
 - Per-prospect stats, measurements and injuries need `prospect_profiles.json` or table data on the source page. Headlines fill the "word on the street" line.
 
 ## Tests
 
 `python -m pytest tests`
+
+## Design
+
+The look is an early 2000s sports portal: pinstripe page, brushed metal header, folder tabs, a scrolling score ticker and aqua buttons for the selected control. Type is Helvetica. Colors and sizes live at the top of `web/style.css`. `scripts/dev_fixture.py` writes made up data into `web/data` so you can preview the app offline (those files are never committed).
