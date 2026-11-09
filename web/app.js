@@ -326,10 +326,25 @@ async function renderLeaders() {
 
 /* ---------- Teams ---------- */
 const rk = (r) => `<span class="${r <= 8 ? "good" : r >= 23 ? "bad" : "kv"}">#${r}</span>`;
-function futurePicks(t) {
+function pickKey(t) {
   const d = cache.team_picks; if (!d) return "";
   const me = logoUrl(t.name, "nba");
-  const key = Object.keys(d.teams).find((n) => (me ? logoUrl(n, "nba") === me : lkey(n) === lkey(t.name)));
+  return Object.keys(d.teams).find((n) => (me ? logoUrl(n, "nba") === me : lkey(n) === lkey(t.name))) || "";
+}
+/* Tradable and locked picks from the RealGM table. Falls back to the older lists when the table is not loaded. */
+function tradeLists(t, oldTradable, oldLocked) {
+  const d = cache.team_picks, key = pickKey(t), st = key && d.status && d.status[key];
+  if (!st) return `${title("Draft picks they can trade")}<div class="list">${oldTradable}</div>${title("Draft picks they cannot trade")}<div class="list">${oldLocked}</div>`;
+  const rnd = (n) => (n === 1 ? "first round" : "second round");
+  const rows = (arr, why) => arr.length ? arr.map((p) => `<div class="row"><span class="rk">${p.year}</span><div class="main"><div class="t">${p.year} ${rnd(p.round)}</div>
+    <div class="s">${esc(p.text)}${why && p.reason ? `<br><b>${esc(p.reason)}</b>` : ""}</div></div></div>`).join("") : `<div class="row"><span class="kv">None</span></div>`;
+  return `${title("Draft picks they can trade", st.tradable.length + " picks")}<div class="list">${rows(st.tradable)}</div>
+    ${title("Draft picks they cannot trade", st.locked.length + " picks")}<div class="list">${rows(st.locked, true)}</div>
+    <p class="note">From RealGM. Locked means frozen, forfeited, or a first round pick the team must keep under the Stepien rule (no gap of two straight drafts without a first). Picks marked conditional depend on where teams finish. Two single first round picks in back to back years can each be traded, but not both.</p>`;
+}
+function futurePicks(t) {
+  const d = cache.team_picks; if (!d) return "";
+  const key = pickKey(t);
   if (!key) return "";
   const cell = (c) => (c.items.length ? c.items.map((x) => `<div>${esc(x)}</div>`).join("") : `<span class="kv">None</span>`) + `<div class="kv">Picks: <b>${esc(c.count)}</b></div>`;
   return `${title("Future draft picks", "RealGM, through 2033")}<div class="tbl"><table class="picks"><thead><tr><th class="l">Year</th><th class="l">First round</th><th class="l">Second round</th></tr></thead><tbody>
@@ -360,8 +375,7 @@ async function renderTeams() {
     ${title("What opponents do against them")}${stats(t.opp, N)}
     ${title("Players and salaries", t.players.length + " players")}<div class="tbl"><table class="sticky1"><thead><tr><th class="l">Player</th><th>Pos</th><th>Ht</th><th>Wt</th><th>Salary</th><th>Thru</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th></tr></thead><tbody>
     ${t.players.map((p) => `<tr><td class="l"><b>${esc(p.name)}</b></td><td>${esc(p.pos || "")}</td><td>${esc(p.ht || "")}</td><td>${p.wt || ""}</td><td>${money(p.salary)}</td><td>${esc(p.contract_end || "")}${p.option ? " (" + esc(p.option) + ")" : ""}</td><td>${p.gp}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td></tr>`).join("")}</tbody></table></div>
-    ${mockPicksFor(t)}${futurePicks(t)}${title("Draft picks they can trade")}<div class="list">${pk(t.picks.tradable)}</div>
-    ${title("Draft picks they cannot trade")}<div class="list">${pk(t.picks.locked)}</div>`;
+    ${mockPicksFor(t)}${futurePicks(t)}${tradeLists(t, pk(t.picks.tradable), pk(t.picks.locked))}`;
 }
 
 /* ---------- Contracts ---------- */

@@ -275,3 +275,14 @@ def test_cyro_mikey_mocks_join_consensus():
     board = draft.aggregate(per, {}, draft.CFG)
     yimga = [e for e in board if e["key"] == "hugo yimga moukouri"][0]
     assert yimga["ranks"] == {"Cyro & Mikey Mock 1.0": 7, "Cyro & Mikey Mock 2.0": 10}
+
+
+def test_team_pick_trade_status():
+    import pathlib, team_picks
+    g = team_picks.parse_csv((pathlib.Path(__file__).resolve().parent.parent / "config" / "team_picks.csv").read_text(encoding="utf-8"))
+    cle = team_picks.trade_status(g["Cleveland Cavaliers"])
+    assert [(x["year"], x["round"]) for x in cle["locked"]] == [(2028, 1), (2030, 1), (2032, 1), (2033, 1)]
+    assert cle["tradable"] == [{"year": 2033, "round": 2, "text": "Own"}]
+    bos = team_picks.trade_status(g["Boston Celtics"])
+    assert any(x["year"] == 2032 and "Frozen" in x["reason"] for x in bos["locked"]) and any(x["year"] == 2027 and x["round"] == 1 for x in bos["tradable"])
+    assert all(len(team_picks.trade_status(v)["tradable"]) > 0 for v in g.values())

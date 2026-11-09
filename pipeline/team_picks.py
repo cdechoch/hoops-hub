@@ -71,6 +71,54 @@ def parse(text):
     return {t: v for t, v in teams.items() if v}
 
 
+FIRST_YEAR, LAST_YEAR = 2027, 2033
+
+
+def sure(count):
+    """'1 + 2' -> 1 (definite picks). The part after + is conditional."""
+    m = re.match(r"\s*(\d+)", str(count))
+    return int(m.group(1)) if m else 0
+
+
+def held(item):
+    """True when the item is a pick the team keeps or receives (not one sent away or forfeited)."""
+    t = item.strip().lower()
+    return not (t.startswith("to ") or t.startswith("forfeited"))
+
+
+def trade_status(rows):
+    """Splits one team's picks into tradable and locked.
+    Locked: frozen or forfeited picks, and first round picks the team must keep under the Stepien rule
+    (a team cannot be left without a first round pick in two back-to-back drafts)."""
+    first = {r["year"]: sure(r["r1"]["count"]) for r in rows}
+    tradable, locked = [], []
+    for r in rows:
+        y = r["year"]
+        for rnd, key in ((1, "r1"), (2, "r2")):
+            cell = r[key]
+            total = sum(int(n) for n in re.findall(r"\d+", str(cell["count"])))
+            for it in cell["items"]:
+                low = it.lower()
+                if low.startswith("forfeited") and "forfeited by" not in low:
+                    locked.append({"year": y, "round": rnd, "text": it, "reason": "Forfeited"})
+            mine = [it for it in cell["items"] if held(it) and "forfeited by" not in it.lower() and total > 0]
+            frozen = [it for it in mine if it.lower().startswith("frozen")]
+            mine = [it for it in mine if it not in frozen]
+            for it in frozen:
+                locked.append({"year": y, "round": rnd, "text": it, "reason": "Frozen, cannot be traded"})
+            if not mine:
+                continue
+            text = "; ".join(mine)
+            if rnd == 1 and first.get(y, 0) == 1:
+                before = first.get(y - 1, 1 if y - 1 < FIRST_YEAR else 0)
+                after = first.get(y + 1, 1 if y + 1 > LAST_YEAR else 0)
+                if before == 0 or after == 0:
+                    locked.append({"year": y, "round": rnd, "text": text, "reason": "Stepien rule: a team must keep a first round pick in back-to-back drafts"})
+                    continue
+            tradable.append({"year": y, "round": rnd, "text": text})
+    return {"tradable": tradable, "locked": locked}
+
+
 def parse_csv(text):
     """RealGM's export: a 'Team Future NBA Draft Picks' row, a Year row, then one row per year with each cell's last line as the pick count."""
     teams, team = {}, None
@@ -101,7 +149,7 @@ def run():
     if csv_path.exists():
         teams = parse_csv(csv_path.read_text(encoding="utf-8"))
         if teams:
-            c.write_data("team_picks", {"source": "RealGM", "teams": teams})
+            c.write_data("team_picks", {"source": "RealGM", "teams": teams, "status": {t: trade_status(v) for t, v in teams.items()}})
             print(f"team picks: {len(teams)} teams")
             return True
     p = c.CONFIG / "team_picks_raw.txt"
@@ -112,7 +160,7 @@ def run():
     if not teams:
         print("team picks: nothing parsed from config/team_picks_raw.txt")
         return False
-    c.write_data("team_picks", {"source": "RealGM", "teams": teams})
+    c.write_data("team_picks", {"source": "RealGM", "teams": teams, "status": {t: trade_status(v) for t, v in teams.items()}})
     print(f"team picks: {len(teams)} teams")
     return True
 
