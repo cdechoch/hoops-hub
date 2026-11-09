@@ -182,6 +182,20 @@ def add_seed(per_source, cycle):
     return {c.norm_name(k): v for k, v in seed.get("profiles", {}).items()}
 
 
+MOCK_SOURCES = (("v1", "Cyro & Mikey Mock 1.0"), ("v2", "Cyro & Mikey Mock 2.0"))
+
+
+def add_mocks(per_source, cycle):
+    """Cyro Asseo and Mikey Visenberg's mock drafts count as two more sources in the consensus (pick number = rank)."""
+    mocks = c.read_config("cyro_mocks.json", {})
+    if mocks.get("cycle") != cycle:
+        return
+    for key, label in MOCK_SOURCES:
+        picks = (mocks.get(key) or {}).get("picks")
+        if picks:
+            per_source[label] = [{"name": x["player"], "rank": x["pick"]} for x in sorted(picks, key=lambda x: x["pick"])]
+
+
 def run():
     cycle = c.draft_cycle_year()
     per_source, hm_profiles = {}, {}
@@ -206,6 +220,7 @@ def run():
     if yt:
         per_source["Cyro Asseo"] = yt
     seed_profiles = add_seed(per_source, cycle)
+    add_mocks(per_source, cycle)
     if not per_source:
         print("No draft sources returned data")
         return

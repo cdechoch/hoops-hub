@@ -266,3 +266,12 @@ def test_team_picks_csv():
     assert atl["year"] == 2027 and atl["r1"]["items"][0] == "To SAN" and atl["r2"]["items"][1] == "56-60 to DAL" and atl["r2"]["count"] == "1"
     det33 = got["Detroit Pistons"][-1]["r2"]
     assert det33["count"] == "1" and "LAC" in det33["items"][0]
+
+
+def test_cyro_mikey_mocks_join_consensus():
+    per = {}
+    draft.add_mocks(per, 2027)
+    assert set(per) == {"Cyro & Mikey Mock 1.0", "Cyro & Mikey Mock 2.0"} and per["Cyro & Mikey Mock 2.0"][0] == {"name": "Tyran Stokes", "rank": 1}
+    board = draft.aggregate(per, {}, draft.CFG)
+    yimga = [e for e in board if e["key"] == "hugo yimga moukouri"][0]
+    assert yimga["ranks"] == {"Cyro & Mikey Mock 1.0": 7, "Cyro & Mikey Mock 2.0": 10}
