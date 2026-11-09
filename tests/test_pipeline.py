@@ -240,3 +240,10 @@ def test_contract_extension_and_trade_rules():
     fresh = dict(base, sig="7/6/2026", end="2030", yrs=yrs(4))
     assert x.trade_status(fresh, today)["type"] == "restricted"
     assert x.trade_status(dict(base, ntc="Yes", yrs=yrs(4)), today)["type"] == "ntc"
+
+
+def test_team_picks_parse():
+    import team_picks
+    txt = "Atlanta Hawks Future NBA Draft Picks\nYear \tFirst Round \tSecond Round\n\n2027\n\t\n\nTo SAN;\n\nLess favorable of MIL and NOP (via NOP)\n\n1\n\t\n\n31-55 Own;\n56-60 to DAL\n\n1\n"
+    got = team_picks.parse(txt)["Atlanta Hawks"][0]
+    assert got["year"] == 2027 and got["r1"]["items"] == ["To SAN", "Less favorable of MIL and NOP (via NOP)"] and got["r2"]["items"][1] == "56-60 to DAL" and got["r2"]["count"] == "1"

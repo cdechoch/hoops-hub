@@ -84,3 +84,7 @@ The look is an early 2000s sports portal: pinstripe page, brushed metal header, 
 - Draft tab: Cyro Asseo and Mikey Visenberg Mock Draft 2.0 and 1.0 (edit `config/cyro_mocks.json`). Team pages show each team's mock 2.0 picks.
 - Contracts tab: with team since, extension eligibility, trade restriction, max contract percent, filters (`pipeline/contract_extras.py`, rules follow hoopsmatic.com/contracts).
 - News: HoopsHype Rumors feed is in `pipeline/news.py`.
+
+## If Contracts or Future Picks are empty
+GitHub's servers can be blocked by hoopsmatic.com. Run `scripts/sync_hoopsmatic.sh` on your Mac (it downloads the sheets from your own connection and pushes them), then re-run the workflow.
+Future draft picks come from `config/team_picks_raw.txt`: copy the "NBA Future Draft Picks By Team" page text, run `pbpaste > config/team_picks_raw.txt`, then commit and push.

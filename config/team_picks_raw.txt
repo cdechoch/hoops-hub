@@ -1,0 +1,2 @@
+pbpaste > config/team_picks_raw.txt
+wc -l config/team_picks_raw.txt

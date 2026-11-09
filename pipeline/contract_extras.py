@@ -68,9 +68,9 @@ def load_awards():
     import csv, io
     r = c.get("https://hoopsmatic.com/api/awards", retries=1)
     out = {}
-    if r is None:
-        return out
-    for row in csv.reader(io.StringIO(r.text)):
+    local = c.CONFIG / "hoopsmatic" / "awards.csv"
+    text = r.text if r is not None and "," in r.text[:400] else (local.read_text(encoding="utf-8") if local.exists() else "")
+    for row in csv.reader(io.StringIO(text)):
         if len(row) > 5 and row[2] and row[3].isdigit() and row[5]:
             out.setdefault(key(row[5]), []).append({"award": row[2], "year": int(row[3])})
     return out

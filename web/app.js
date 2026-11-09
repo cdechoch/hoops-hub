@@ -8,7 +8,7 @@ const TABS = [
 ];
 const DATA_FOR = {
   live: ["scores"], standings: ["standings"], trending: ["trends"], news: ["news"], injuries: ["injuries"], draft: ["draft"],
-  rookies: ["rookies"], leaders: ["leaders"], teams: ["teams"], contracts: ["contracts"], cap: ["cap"],
+  rookies: ["rookies"], leaders: ["leaders"], teams: ["teams", "team_picks"], contracts: ["contracts"], cap: ["cap"],
 };
 const ALL_DATA = [...new Set(Object.values(DATA_FOR).flat())];
 const REFRESH_MS = 60 * 1000;
@@ -326,6 +326,15 @@ async function renderLeaders() {
 
 /* ---------- Teams ---------- */
 const rk = (r) => `<span class="${r <= 8 ? "good" : r >= 23 ? "bad" : "kv"}">#${r}</span>`;
+function futurePicks(t) {
+  const d = cache.team_picks; if (!d) return "";
+  const me = logoUrl(t.name, "nba");
+  const key = Object.keys(d.teams).find((n) => (me ? logoUrl(n, "nba") === me : lkey(n) === lkey(t.name)));
+  if (!key) return "";
+  const cell = (c) => (c.items.length ? c.items.map((x) => `<div>${esc(x)}</div>`).join("") : `<span class="kv">None</span>`) + `<div class="kv">Picks: <b>${esc(c.count)}</b></div>`;
+  return `${title("Future draft picks", "HoopsMatic, through 2033")}<div class="tbl"><table class="picks"><thead><tr><th class="l">Year</th><th class="l">First round</th><th class="l">Second round</th></tr></thead><tbody>
+    ${d.teams[key].map((r) => `<tr><td class="l"><b>${r.year}</b></td><td class="l">${cell(r.r1)}</td><td class="l">${cell(r.r2)}</td></tr>`).join("")}</tbody></table></div>`;
+}
 function mockPicksFor(t) {
   const m = cache.draft && cache.draft.mocks && cache.draft.mocks.v2; if (!m) return "";
   const me = logoUrl(t.name, "nba"), mine = m.picks.filter((x) => (me ? logoUrl(x.team, "nba") === me : lkey(x.team) === lkey(t.name)));
@@ -351,7 +360,7 @@ async function renderTeams() {
     ${title("What opponents do against them")}${stats(t.opp, N)}
     ${title("Players and salaries", t.players.length + " players")}<div class="tbl"><table class="sticky1"><thead><tr><th class="l">Player</th><th>Pos</th><th>Ht</th><th>Wt</th><th>Salary</th><th>Thru</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th></tr></thead><tbody>
     ${t.players.map((p) => `<tr><td class="l"><b>${esc(p.name)}</b></td><td>${esc(p.pos || "")}</td><td>${esc(p.ht || "")}</td><td>${p.wt || ""}</td><td>${money(p.salary)}</td><td>${esc(p.contract_end || "")}${p.option ? " (" + esc(p.option) + ")" : ""}</td><td>${p.gp}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td></tr>`).join("")}</tbody></table></div>
-    ${mockPicksFor(t)}${title("Draft picks they can trade")}<div class="list">${pk(t.picks.tradable)}</div>
+    ${mockPicksFor(t)}${futurePicks(t)}${title("Draft picks they can trade")}<div class="list">${pk(t.picks.tradable)}</div>
     ${title("Draft picks they cannot trade")}<div class="list">${pk(t.picks.locked)}</div>`;
 }
 
@@ -389,7 +398,7 @@ function contractRows(d) {
 }
 async function renderContracts() {
   const d = cache.contracts;
-  if (!d) return failed.contracts ? empty("No contracts yet", "Contracts refresh hourly from HoopsMatic.") : skeleton();
+  if (!d) return failed.contracts ? empty("Contracts have not loaded yet", "The contract sheet comes from hoopsmatic.com/contracts. If this stays empty, the hourly update could not reach it. Setup notes are in the README.") : skeleton();
   const teams = [...new Set(d.players.map((p) => p.team))].sort();
   const sel = `<select class="btn" data-act="cTeam" aria-label="Team"><option value="all">All teams</option>${teams.map((t) => `<option ${ui.cTeam === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`;
   const opt = (cur, pairs) => pairs.map(([v, l]) => `<option value="${v}" ${cur === v ? "selected" : ""}>${l}</option>`).join("");
