@@ -49,7 +49,7 @@ function initials(name) {
   return (w.length > 1 ? w[0][0] + w[1][0] : (w[0] || "?").slice(0, 2)).toUpperCase();
 }
 function logoUrl(name, kind) {
-  const k = lkey(name), t = LOGOS[kind] || {};
+  const k = lkey(name).replace(/sixers$/, "76ers"), t = LOGOS[kind] || {};
   if (t[k]) return t[k];
   const bare = lkey(String(name).replace(/\(.*?\)/g, ""));
   if (t[bare]) return t[bare];
