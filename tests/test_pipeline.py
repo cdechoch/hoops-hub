@@ -247,3 +247,22 @@ def test_team_picks_parse():
     txt = "Atlanta Hawks Future NBA Draft Picks\nYear \tFirst Round \tSecond Round\n\n2027\n\t\n\nTo SAN;\n\nLess favorable of MIL and NOP (via NOP)\n\n1\n\t\n\n31-55 Own;\n56-60 to DAL\n\n1\n"
     got = team_picks.parse(txt)["Atlanta Hawks"][0]
     assert got["year"] == 2027 and got["r1"]["items"] == ["To SAN", "Less favorable of MIL and NOP (via NOP)"] and got["r2"]["items"][1] == "56-60 to DAL" and got["r2"]["count"] == "1"
+
+
+def test_contracts_page_parse():
+    import contracts_page as cp
+    txt = ("Intro\n\nJalen Johnson\n\t\nAtlanta\n\t$30.0M\t$30.0M\t$13.1MTO\t—\t—\t—\t2030CH: $45.0M\t\t$120.0M\tBird\t10/21/2024\tAtlanta\t2021-22\t\tDec 15, 2026\t\t\tOct 1, 2027Designated Veteran\n"
+           "Reece Beekman\n\t\nWashington\n\t$679K\t—\t—\t—\t—\t—\t2027CH: $2.3M\t\t\t\t10/17/2026\tWashington\t2026-27\t\tExpiring\t\t\tStandard Contract Conversion Eligible\n")
+    a, b = cp.parse(txt)
+    assert a["team"] == "Atlanta" and a["years"][2]["st"] == "TEAM OPTION" and a["since"] == "2021-22" and a["dv"] and a["ext"]["status"] == "future"
+    assert a["trade"]["type"] == "restricted" and b["trade"]["type"] == "expiring" and b["ext"]["status"] == "na" and b["years"][0]["sal"] == 679000
+
+
+def test_team_picks_csv():
+    import pathlib, team_picks
+    got = team_picks.parse_csv((pathlib.Path(__file__).resolve().parent.parent / "config" / "team_picks.csv").read_text(encoding="utf-8"))
+    assert len(got) == 30 and all(len(v) == 7 for v in got.values())
+    atl = got["Atlanta Hawks"][0]
+    assert atl["year"] == 2027 and atl["r1"]["items"][0] == "To SAN" and atl["r2"]["items"][1] == "56-60 to DAL" and atl["r2"]["count"] == "1"
+    det33 = got["Detroit Pistons"][-1]["r2"]
+    assert det33["count"] == "1" and "LAC" in det33["items"][0]

@@ -1,5 +1,7 @@
-"""Future draft picks by team (HoopsMatic's "NBA Future Draft Picks By Team" page).
+"""Future draft picks by team (RealGM's "NBA Future Draft Picks By Team" page).
 Copy the page text into config/team_picks_raw.txt (see README) and this turns it into data/team_picks.json."""
+import csv
+import io
 import re
 
 import common as c
@@ -69,7 +71,39 @@ def parse(text):
     return {t: v for t, v in teams.items() if v}
 
 
+def parse_csv(text):
+    """RealGM's export: a 'Team Future NBA Draft Picks' row, a Year row, then one row per year with each cell's last line as the pick count."""
+    teams, team = {}, None
+
+    def cell(raw):
+        lines = [x.strip() for x in str(raw).split("\n")]
+        lines = [x for x in lines if x != ""]
+        count = "0"
+        if lines and COUNT.match(lines[-1]):
+            count = re.sub(r"\s+", " ", lines.pop())
+        return {"items": items(lines), "count": count}
+
+    for row in csv.reader(io.StringIO(text)):
+        if not row:
+            continue
+        m = HEADER.match(row[0].strip())
+        if m:
+            team = m.group(1).strip()
+            teams[team] = []
+            continue
+        if team and YEAR.match(row[0].strip()) and len(row) >= 3:
+            teams[team].append({"year": int(row[0]), "r1": cell(row[1]), "r2": cell(row[2])})
+    return {t: v for t, v in teams.items() if v}
+
+
 def run():
+    csv_path = c.CONFIG / "team_picks.csv"
+    if csv_path.exists():
+        teams = parse_csv(csv_path.read_text(encoding="utf-8"))
+        if teams:
+            c.write_data("team_picks", {"source": "RealGM", "teams": teams})
+            print(f"team picks: {len(teams)} teams")
+            return True
     p = c.CONFIG / "team_picks_raw.txt"
     if not p.exists():
         print("team picks: config/team_picks_raw.txt not found, skipping")
@@ -78,7 +112,7 @@ def run():
     if not teams:
         print("team picks: nothing parsed from config/team_picks_raw.txt")
         return False
-    c.write_data("team_picks", {"source": "HoopsMatic", "teams": teams})
+    c.write_data("team_picks", {"source": "RealGM", "teams": teams})
     print(f"team picks: {len(teams)} teams")
     return True
 

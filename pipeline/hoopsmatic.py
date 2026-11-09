@@ -206,6 +206,12 @@ def run():
                 print("contract extras skipped:", exc)
             c.write_data("contracts", {"players": contracts})
             c.write_state("salaries", {c.norm_name(p["name"]): p["years"][0]["sal"] for p in contracts})
+    if not contracts_rows:
+        try:  # the data feed refuses GitHub's servers, so use the pasted copy of the contracts page
+            import contracts_page
+            contracts_page.run()
+        except Exception as exc:
+            print("contracts page skipped:", exc)
     if roster_rows:
         ros = parse_roster(roster_rows)
         c.write_state("roster_flags", ros["players"])
@@ -220,7 +226,7 @@ def run():
             c.write_data("cap", {"source": "HoopsMatic", "thresholds": c.read_config("cap_thresholds.json", {}), "teams": teams})
     if draft_rows:
         c.write_state("hm_draft", parse_draft(draft_rows))
-    return bool(contracts_rows or roster_rows)
+    return bool(contracts_rows or roster_rows or (c.DATA / 'contracts.json').exists())
 
 
 if __name__ == "__main__":

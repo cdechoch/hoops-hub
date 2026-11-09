@@ -15,6 +15,7 @@ import common as c
 FEEDS = {
     # Major basketball and NBA outlets
     "HoopsHype": ("https://hoopshype.com/feed/", "ball"),
+    "HoopsHype News": ("https://news.google.com/rss/search?q=site:hoopshype.com&hl=en-US&gl=US&ceid=US:en", "ball"),
     "HoopsHype Rumors": ("https://feeds.hoopshype.com/xml/rumors.xml", "ball"),
     "HoopsRumors": ("https://www.hoopsrumors.com/feed", "ball"),
     "RealGM": ("https://basketball.realgm.com/rss/wiretap/0/0.xml", "ball"),
@@ -143,6 +144,7 @@ def fetch_feed(source, url, kind):
     items = []
     for e in feed.entries[:30]:
         title = re.sub(r"\s+", " ", html.unescape(e.get("title", ""))).strip()
+        title = re.sub(r"\s+[-|]\s+(HoopsHype|hoopshype\.com)$", "", title)
         summary = entry_summary(e, title)
         if kind == "wide" and not is_basketball(title, summary):
             continue

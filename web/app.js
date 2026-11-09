@@ -332,7 +332,7 @@ function futurePicks(t) {
   const key = Object.keys(d.teams).find((n) => (me ? logoUrl(n, "nba") === me : lkey(n) === lkey(t.name)));
   if (!key) return "";
   const cell = (c) => (c.items.length ? c.items.map((x) => `<div>${esc(x)}</div>`).join("") : `<span class="kv">None</span>`) + `<div class="kv">Picks: <b>${esc(c.count)}</b></div>`;
-  return `${title("Future draft picks", "HoopsMatic, through 2033")}<div class="tbl"><table class="picks"><thead><tr><th class="l">Year</th><th class="l">First round</th><th class="l">Second round</th></tr></thead><tbody>
+  return `${title("Future draft picks", "RealGM, through 2033")}<div class="tbl"><table class="picks"><thead><tr><th class="l">Year</th><th class="l">First round</th><th class="l">Second round</th></tr></thead><tbody>
     ${d.teams[key].map((r) => `<tr><td class="l"><b>${r.year}</b></td><td class="l">${cell(r.r1)}</td><td class="l">${cell(r.r2)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 function mockPicksFor(t) {
@@ -388,8 +388,8 @@ function contractRows(d) {
       ["Max contract", p.maxpct ? p.maxpct + "% of cap" + (p.dv ? " (Designated Veteran eligible)" : "") : ""],
       ["Extension", p.ext && p.ext.detail ? p.ext.text + ". " + p.ext.detail : ""], ["Trade", p.trade ? (p.trade.detail || p.trade.text) : ""], ["Exception", p.exception], ["Signed", p.signed ? p.signed + (p.signed_by ? " by " + p.signed_by : "") : ""], ["Trade kicker", p.kicker],
       ["Likely bonus", p.likely], ["Unlikely bonus", p.unlikely], ["Notes", p.notes]].filter((x) => x[1]).map((x) => `<span class="kv">${x[0]}: <b>${esc(x[1])}</b></span>`).join("");
-    return `<details class="p"><summary><span style="flex:1;min-width:0"><b>${esc(p.name)}</b> <span class="kv">${tm(p.team, "nba")}</span>${extLine(p)}</span>
-      <b>${money(p.years[0] && p.years[0].sal)}</b><span class="kv">${esc(p.end ? "thru " + p.end : "")}${p.option ? ", " + esc(p.option) : ""}</span></summary>
+    return `<details class="p c"><summary><span style="flex:1 1 150px;min-width:0"><b>${esc(p.name)}</b> <span class="kv">${tm(p.team, "nba")}</span></span>
+      <b>${money(p.years[0] && p.years[0].sal)}</b><span class="kv">${esc(p.end ? "thru " + p.end : "")}${p.option ? ", " + esc(p.option) : ""}</span>${extLine(p)}</summary>
       <div class="pbody" style="padding-left:16px"><div class="tbl"><table><thead><tr><th class="l">Season</th><th>Salary</th><th>Cap hold</th><th class="l">Status</th></tr></thead><tbody>${yrs}</tbody></table></div>
       <div class="kv">Total guaranteed: <b>${money(p.total)}</b></div>${facts ? `<div class="facts">${facts}</div>` : ""}</div></details>`;
   }).join("");

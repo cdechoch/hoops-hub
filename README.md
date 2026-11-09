@@ -87,4 +87,5 @@ The look is an early 2000s sports portal: pinstripe page, brushed metal header, 
 
 ## If Contracts or Future Picks are empty
 GitHub's servers can be blocked by hoopsmatic.com. Run `scripts/sync_hoopsmatic.sh` on your Mac (it downloads the sheets from your own connection and pushes them), then re-run the workflow.
-Future draft picks come from `config/team_picks_raw.txt`: copy the "NBA Future Draft Picks By Team" page text, run `pbpaste > config/team_picks_raw.txt`, then commit and push.
+Future draft picks (RealGM) come from `config/team_picks_raw.txt`: copy the whole page, then run `scripts/paste_picks.sh`.
+Contracts come from `config/contracts_raw.txt`: on hoopsmatic.com/contracts press Cmd+A, Cmd+C, then run `pbpaste > config/contracts_raw.txt`, commit and push.
