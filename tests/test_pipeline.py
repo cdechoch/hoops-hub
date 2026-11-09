@@ -218,3 +218,25 @@ def test_draft_seed_board_builds_without_network():
     assert len(per) == 6 and profiles["tyran stokes"]["school"] == "Kansas"
     board = draft.aggregate(per, {}, draft.CFG)
     assert board[0]["name"] == "Tyran Stokes" and len(board) >= 70
+
+
+def test_logo_keys_and_mocks():
+    import json, logos
+    assert logos.key("LA Clippers") == logos.key("la-clippers")
+    got = logos.build({"sports": [{"leagues": [{"teams": [{"team": {"displayName": "Kansas Jayhawks", "location": "Kansas", "abbreviation": "KU", "logos": [{"href": "u.png"}]}}]}]}]})
+    assert got["kansas"] == got["ku"] == got["kansasjayhawks"] == "u.png"
+    m = json.loads((pathlib.Path(__file__).resolve().parent.parent / "config" / "cyro_mocks.json").read_text())
+    assert len(m["v1"]["picks"]) == 30 and len(m["v2"]["picks"]) == 30 and m["v2"]["picks"][0]["team"] == "New Orleans Pelicans"
+
+
+def test_contract_extension_and_trade_rules():
+    import datetime as dt, contract_extras as x
+    today = dt.date(2026, 11, 8)
+    yrs = lambda n, st="GUARANTEED": [{"sal": 10e6 if i < n else None, "st": st if i < n else ""} for i in range(7)]
+    base = dict(team="Miami Heat", notes="", end="2029", sig="7/1/2025", draft_year=0, awards=[], recent=2025, yos=5, dv_awards=[], dv=False, ntc="", restriction="")
+    four_year = dict(base, yrs=yrs(4))
+    assert x.ext_elig(four_year, today)["status"] == "future"  # 4 year deal waits until the 2nd anniversary
+    assert x.max_pct(dict(base, yos=8)) == 30 and x.max_pct(dict(base, yos=3)) == 25
+    fresh = dict(base, sig="7/6/2026", end="2030", yrs=yrs(4))
+    assert x.trade_status(fresh, today)["type"] == "restricted"
+    assert x.trade_status(dict(base, ntc="Yes", yrs=yrs(4)), today)["type"] == "ntc"

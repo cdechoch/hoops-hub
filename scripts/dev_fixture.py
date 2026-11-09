@@ -76,7 +76,11 @@ for s in teams[:3]:
                    players=[dict(top[i], name=names[i], salary=32_000_000 - i * 3_000_000, pos="G", ht="6-5", wt=205, contract_end="2029") for i in range(8)],
                    picks={"tradable": [{"year": 2028, "round": 1, "from": "own"}], "locked": [{"year": 2027, "round": 1, "from": "own", "reason": "Stepien rule"}]}))
 w("teams", {"teams": tm, "source": "ESPN"})
-w("contracts", {"players": [{"name": names[i], "team": "New York Knicks", "years": [{"y": "2026-27", "sal": 38e6, "ch": 38e6, "st": "GUARANTEED"}], "end": "2030", "option": "", "total": 150e6} for i in range(6)]})
+_ext = [("eligible", "Eligible", "Since Jul 1, 2025 · Max 30%"), ("future", "Jul 1, 2027", "4-year deal, 2nd anniv. · Max 25%"), ("extended", "Extended", "Extension (5 yr)"),
+        ("ineligible", "Ineligible", "Expiring rookie scale (RFA 2027)"), ("rookie", "Rookie Scale", "Rookie Scale Ext. / Max (25%)"), ("na", "N/A", "10-Day")]
+w("contracts", {"players": [{"name": names[i], "team": "New York Knicks", "years": [{"y": "2026-27", "sal": 38e6, "ch": 38e6, "st": "GUARANTEED"}], "end": "2030", "option": "", "total": 150e6,
+                             "since": "2023-24", "ext": dict(zip(("status", "text", "detail"), _ext[i]), dv=False), "trade": ({"type": "restricted", "text": "Dec 15, 2026", "detail": "Signed Jul 6, 2026 · Tradeable Dec 15, 2026 (Dec 15 rule)"} if i == 1 else None),
+                             "maxpct": 30, "dv": i == 0} for i in range(6)]})
 w("cap", {"source": "HoopsMatic", "thresholds": {"season": "2026-27", "salary_cap": 164961000, "luxury_tax": 200428000, "first_apron": 209015000, "second_apron": 221686000},
           "teams": [{"team": t["name"], "payroll": 180e6, "cap_space": -15e6, "tax_room": 20e6, "first_apron_room": 29e6, "second_apron_room": 41e6, "status": "BELOW TAX", "exceptions": {"mle_type": "Non-taxpayer", "mle_left": 14e6, "bae": 5e6}, "tpes": []} for t in teams[:6]]})
 print("fixtures written to", D)

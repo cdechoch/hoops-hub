@@ -196,6 +196,14 @@ def run():
     if contracts_rows:
         contracts = parse_contracts(contracts_rows)
         if contracts:
+            try:
+                import contract_extras
+                flags = {}
+                if roster_rows:
+                    flags = parse_roster(roster_rows)["players"]
+                contract_extras.enrich(contracts, flags, draft_rows)
+            except Exception as exc:  # extras are a bonus, the base table must still publish
+                print("contract extras skipped:", exc)
             c.write_data("contracts", {"players": contracts})
             c.write_state("salaries", {c.norm_name(p["name"]): p["years"][0]["sal"] for p in contracts})
     if roster_rows:

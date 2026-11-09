@@ -22,7 +22,7 @@ const failed = {};
 const fresh = new Set();
 const ui = {
   tab: "live", newsWin: "live", newsSrc: "all", newsMore: 60, trendWin: "1h", leaderMode: "perGame", leaderCat: "PTS", pos: "G",
-  team: "", injTeam: "all", q: "", cTeam: "all", cMore: 60, stView: "conf", dq: "", dMore: 50,
+  team: "", injTeam: "all", q: "", cTeam: "all", cExt: "all", cTrade: "all", cMore: 60, stView: "conf", dq: "", dMore: 50,
 };
 
 function store(k, v) {
@@ -38,7 +38,40 @@ const rel = (iso) => {
 };
 const empty = (title, body) => `<div class="empty"><b>${esc(title)}</b>${esc(body)}</div>`;
 const skeleton = () => `<div class="skel" aria-busy="true" aria-label="Loading"><i></i><i></i><i></i><i></i><i></i><i></i></div>`;
-const logo = (u) => (u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : "");
+const logo = (u, big) => (u ? `<img ${big ? "" : 'class="lg" '}src="${esc(u)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : "");
+const tlogo = (t) => logo(t.logo || logoUrl(t.name, "nba") || logoUrl(t.name, "college"));
+/* Team logos by name, abbreviation or school. Built-in table first, the pipeline's fuller table layered on top. */
+const LOGOS = { nba: {}, college: {} };
+const nick = (n) => (/Trail Blazers$/.test(n || "") ? "Trail Blazers" : String(n || "").split(" ").pop());
+const lkey = (s) => String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9]/g, "");
+function initials(name) {
+  const w = String(name || "?").replace(/[()]/g, "").split(/\s+/).filter(Boolean);
+  return (w.length > 1 ? w[0][0] + w[1][0] : (w[0] || "?").slice(0, 2)).toUpperCase();
+}
+function logoUrl(name, kind) {
+  const k = lkey(name), t = LOGOS[kind] || {};
+  if (t[k]) return t[k];
+  const bare = lkey(String(name).replace(/\(.*?\)/g, ""));
+  if (t[bare]) return t[bare];
+  if (kind === "college") { const sw = lkey(String(name).replace(/^university of /i, "").replace(/ university$/i, "")); if (t[sw]) return t[sw]; }
+  if (kind === "nba") { const nick = lkey(String(name).split(" ").pop()); if (t[nick]) return t[nick]; }
+  return "";
+}
+/* One team chip: logo (or initials when there is none) followed by the name. kind is "nba" or "college". */
+function tm(name, kind, label) {
+  if (!name) return "";
+  const u = logoUrl(name, kind || "nba");
+  const icon = u ? `<img class="lg" src="${esc(u)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;lg&quot;>${esc(initials(name))}</span>'">` : `<span class="lg">${esc(initials(name))}</span>`;
+  return `<span class="tc">${icon}${esc(label == null ? name : label)}</span>`;
+}
+async function loadLogos() {
+  for (const path of ["seed/logos.json", "data/logos.json"]) {
+    try {
+      const d = await fetchJson(path);
+      Object.assign(LOGOS.nba, d.nba || {}); Object.assign(LOGOS.college, d.college || {});
+    } catch (e) { /* the other table still works */ }
+  }
+}
 const title = (t, sub) => `<h2 class="bar-title">${esc(t)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</h2>`;
 
 /* ---------- Data loading: saved copy first, network second ---------- */
@@ -74,7 +107,7 @@ function gameCard(g) {
   const live = g.state === "in", done = g.state === "post";
   const status = live ? `<span class="live">${esc(g.detail)}</span>` : done ? `<span>Final</span>`
     : `<span>${esc(new Date(g.start).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }))}</span>`;
-  const side = (t, win) => `<div class="tm ${done && !win ? "lose" : ""}">${logo(t.logo)}
+  const side = (t, win) => `<div class="tm ${done && !win ? "lose" : ""}">${tlogo(t)}
     <span class="nm">${esc(t.name)} <span class="kv">${esc(t.record)}</span></span><span class="sc">${g.state === "pre" ? "" : t.score}</span></div>`;
   const aw = Number(g.away.score) > Number(g.home.score);
   const perf = (g.performers || []).map((p) =>
@@ -115,7 +148,7 @@ const seedOf = (t) => (String(t.seed).match(/^\d+$/) ? Number(t.seed) : 99);
 function confTable(conf, teams) {
   const rows = teams.map((t, i) => {
     const s = seedOf(t) === 99 ? i + 1 : seedOf(t);
-    return `<tr class="${s === 6 ? "cut" : s === 10 ? "cut2" : ""}"><td class="team">${s}. ${logo(t.logo)}${esc(t.name)}</td><td>${esc(t.w)}</td><td>${esc(t.l)}</td><td>${esc(t.pct)}</td>
+    return `<tr class="${s === 6 ? "cut" : s === 10 ? "cut2" : ""}"><td class="team">${s}. ${tlogo(t)}${esc(t.name)}</td><td>${esc(t.w)}</td><td>${esc(t.l)}</td><td>${esc(t.pct)}</td>
       <td>${esc(t.gb)}</td><td>${streakCell(t.streak)}</td><td>${esc(t.l10)}</td><td>${esc(t.home)}</td><td>${esc(t.away)}</td><td>${esc(t.diff)}</td></tr>`;
   }).join("");
   return `${title(conf + "ern Conference")}<div class="tbl"><table class="sticky1"><thead><tr><th class="l">Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>Strk</th><th>L10</th><th>Home</th><th>Away</th><th>Diff</th></tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -123,7 +156,7 @@ function confTable(conf, teams) {
 function streakList(list, kind) {
   if (!list.length) return empty(kind === "w" ? "No active win streaks" : "No active losing streaks", "Streaks show once teams have played.");
   return `<div class="list">${list.map((t) => `<div class="row"><span class="badge ${kind}">${esc(t.streak)}</span>
-    <div class="main"><div class="t">${logo(t.logo)}${esc(t.name)}</div><div class="s">${esc(t.conf)}, ${esc(t.w)}-${esc(t.l)}, last 10 ${esc(t.l10 || "n/a")}</div></div></div>`).join("")}</div>`;
+    <div class="main"><div class="t">${tlogo(t)}${esc(t.name)}</div><div class="s">${esc(t.conf)}, ${esc(t.w)}-${esc(t.l)}, last 10 ${esc(t.l10 || "n/a")}</div></div></div>`).join("")}</div>`;
 }
 async function renderStandings() {
   const d = cache.standings, seg = `<div class="chips">${stSeg()}</div>`;
@@ -138,7 +171,7 @@ async function renderStandings() {
   if (ui.stView === "last10") {
     const rows = teams.filter((t) => t.l10w != null).sort((a, b) => b.l10w - a.l10w || b.streakN - a.streakN).map((t, i) => {
       const w = t.l10w, bar = Array.from({ length: 10 }, (_, k) => `<i class="${k < w ? "w" : ""}"></i>`).join("");
-      return `<tr><td class="num">${i + 1}</td><td class="team">${logo(t.logo)}${esc(t.name)}</td><td>${esc(t.conf)}</td><td><b>${esc(t.l10)}</b></td>
+      return `<tr><td class="num">${i + 1}</td><td class="team">${tlogo(t)}${esc(t.name)}</td><td>${esc(t.conf)}</td><td><b>${esc(t.l10)}</b></td>
         <td class="l"><span class="l10" aria-hidden="true">${bar}</span></td><td>${streakCell(t.streak)}</td><td>${esc(t.w)}-${esc(t.l)}</td></tr>`;
     }).join("");
     return seg + (rows ? `${title("Best to worst over the last 10 games")}<div class="tbl"><table><thead><tr><th>#</th><th class="l">Team</th><th>Conf</th><th>L10</th><th class="l">Wins in 10</th><th>Strk</th><th>Season</th></tr></thead><tbody>${rows}</tbody></table></div>`
@@ -203,9 +236,9 @@ async function renderInjuries() {
   const opts = `<option value="all">All teams</option>` + d.teams.map((t) => `<option ${ui.injTeam === t.team ? "selected" : ""}>${esc(t.team)}</option>`).join("");
   const teams = d.teams.filter((t) => ui.injTeam === "all" || t.team === ui.injTeam);
   return `<div class="chips"><select class="btn" data-act="injTeam" aria-label="Team">${opts}</select></div>` +
-    (teams.length ? teams.map((t) => `${title(t.team, t.players.length + (t.players.length === 1 ? " player" : " players"))}<div class="tbl"><table>
+    (teams.length ? teams.map((t) => `<h2 class="bar-title">${tm(t.team, "nba")}<span class="sub">${t.players.length + (t.players.length === 1 ? " player" : " players")}</span></h2><div class="tbl"><table>
     <thead><tr><th class="l">Player</th><th class="l">Reported injury</th><th class="l">Status</th><th class="l">Expected return</th></tr></thead><tbody>
-    ${t.players.map((p) => `<tr><td class="l"><b>${esc(p.name)}</b></td><td class="l">${esc(p.injury)}</td><td class="l">${esc(p.status)}</td>
+    ${t.players.map((p) => `<tr><td class="l"><b>${esc(p.name)}</b> <span class="kv">${tm(t.team, "nba", nick(t.team))}</span></td><td class="l">${esc(p.injury)}</td><td class="l">${esc(p.status)}</td>
     <td class="l">${esc(p.return || p.note || "No date reported")}</td></tr>`).join("")}</tbody></table></div>`).join("") : empty("No injuries reported", "Nobody is listed for this team."));
 }
 
@@ -225,7 +258,7 @@ function draftRows(d) {
       .filter((x) => x[1]).map((x) => `<span class="kv">${x[0]}: <b>${esc(x[1])}</b></span>`).join(" ") : "";
     const intel = (p.intel || []).map((n) => `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)} <span class="kv">${esc(n.source)}</span></a>`).join("");
     return `<details class="p"><summary><span class="rk" style="width:32px;text-align:right;font-weight:700">${p.rank}</span>
-      <span style="flex:1;min-width:0"><b>${esc(p.name)}</b> <span class="kv">${esc(pr.pos || "")}${pr.school ? ", " + esc(pr.school) : ""}</span></span>${mv(p.move)}</summary>
+      <span style="flex:1;min-width:0"><b>${esc(p.name)}</b> <span class="kv">${esc(pr.pos || "")}</span> ${pr.school ? `<span class="kv">${tm(pr.school, "college")}</span>` : ""}</span>${mv(p.move)}</summary>
       <div class="pbody">${pr.note ? `<div class="word">${esc(pr.note)}</div>` : ""}${st}<div class="facts">${facts || '<span class="kv">Profile not available yet</span>'}</div>
       <div class="kv">Previous rank: <b>${p.prev || "none"}</b>. Consensus average: <b>${p.avg}</b></div>
       ${cb ? `<div>Combine ${esc(pr.combine.year)}: ${cb}</div>` : ""}
@@ -234,16 +267,26 @@ function draftRows(d) {
   return (rows ? `<div class="list">${rows}</div>` : empty("No prospects match", "Try a different name or school.")) +
     (!q && total > list.length ? `<div class="chips" style="margin-top:16px"><button class="btn" data-act="dMore" data-v="${ui.dMore + 50}">Show more (${total - list.length} left)</button></div>` : "");
 }
+function mockHtml(d) {
+  const m = d.mocks || {};
+  const schoolOf = (name) => { const k = lkey(name).replace(/(jr|sr|ii|iii|iv)$/, ""); const hit = d.players.find((p) => lkey(p.name).replace(/(jr|sr|ii|iii|iv)$/, "") === k); return hit && hit.profile ? hit.profile.school : ""; };
+  const block = (v, withTeam) => v && v.picks ? `<section class="mock">${title(v.title, "30 picks")}<div class="list"><ol>${v.picks.map((x) => {
+    const sc = schoolOf(x.player);
+    return `<li><span class="pk">${x.pick}</span>${withTeam ? tm(x.team, "nba", nick(x.team)) : ""}<span><b>${esc(x.player)}</b>${sc ? ` <span class="kv">${tm(sc, "college")}</span>` : ""}</span></li>`;
+  }).join("")}</ol></div></section>` : "";
+  return block(m.v2, true) + block(m.v1, false);
+}
 async function renderDraft() {
   const d = cache.draft;
   if (!d) return failed.draft ? empty("Draft board not built yet", "The board is rebuilt every Monday from big boards and mock drafts.") : skeleton();
   return `<div class="chips"><input id="dq" class="btn" type="search" placeholder="Search prospects or schools" value="${esc(ui.dq)}" aria-label="Search prospects"></div>
     ${title(`${d.label} consensus board`, `${d.players.length} prospects`)}<div id="dlist">${draftRows(d)}</div>
+    ${mockHtml(d)}
     <p class="note">Sources: ${esc(d.sources.join(", "))}. Moves compare with last week's board. The board rebuilds every Monday and adds more prospects as sources publish deeper lists.</p>`;
 }
 
 /* ---------- Rookies ---------- */
-const statRow = (p, i) => `<tr><td class="l"><b>${i ? i + ". " : ""}${esc(p.name)}</b> <span class="kv">${esc(p.team)}</span></td><td>${p.gp}</td><td>${p.min}</td>
+const statRow = (p, i) => `<tr><td class="l"><b>${i ? i + ". " : ""}${esc(p.name)}</b> <span class="kv">${tm(p.team, "nba")}</span></td><td>${p.gp}</td><td>${p.min}</td>
   <td>${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td><td>${p.stl}</td><td>${p.blk}</td><td>${p.fg}</td><td>${p.tp}</td></tr>`;
 const statHead = `<thead><tr><th class="l">Player</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG%</th><th>3P%</th></tr></thead>`;
 async function renderRookies() {
@@ -270,7 +313,7 @@ async function renderLeaders() {
     if (!set[ui.leaderCat]) ui.leaderCat = cats[0];
     const sel = `<select class="btn" data-act="leaderCat" aria-label="Category">${cats.map((c) => `<option value="${c}" ${c === ui.leaderCat ? "selected" : ""}>${CAT_NAMES[c] || c}</option>`).join("")}</select>`;
     return `<div class="chips">${modes}${sel}</div><div class="list">${set[ui.leaderCat].map((r, i) => `<div class="row"><span class="rk">${i + 1}</span>
-      <div class="main"><div class="t">${esc(r.name)}</div><div class="s">${esc(r.team)}</div></div><div class="end">${r.val}</div></div>`).join("")}</div>`;
+      <div class="main"><div class="t">${esc(r.name)}</div><div class="s">${tm(r.team, "nba")}</div></div><div class="end">${r.val}</div></div>`).join("")}</div>`;
   }
   let list, head;
   if (ui.leaderMode === "pos") {
@@ -283,6 +326,12 @@ async function renderLeaders() {
 
 /* ---------- Teams ---------- */
 const rk = (r) => `<span class="${r <= 8 ? "good" : r >= 23 ? "bad" : "kv"}">#${r}</span>`;
+function mockPicksFor(t) {
+  const m = cache.draft && cache.draft.mocks && cache.draft.mocks.v2; if (!m) return "";
+  const me = logoUrl(t.name, "nba"), mine = m.picks.filter((x) => (me ? logoUrl(x.team, "nba") === me : lkey(x.team) === lkey(t.name)));
+  if (!mine.length) return `${title("Projected " + (cache.draft.cycle || "") + " picks", "Cyro and Mikey mock 2.0")}<div class="list"><div class="row"><span class="kv">No first round picks in this mock</span></div></div>`;
+  return `${title("Projected " + (cache.draft.cycle || "") + " picks", "Cyro and Mikey mock 2.0")}<div class="list">${mine.map((x) => `<div class="row"><span class="rk">${x.pick}</span><div class="main"><div class="t">${esc(x.player)}</div><div class="s">Pick ${x.pick}${(() => { const sc = ((cache.draft.players.find((p) => lkey(p.name) === lkey(x.player)) || {}).profile || {}).school; return sc ? ", " + tm(sc, "college") : ""; })()}</div></div></div>`).join("")}</div>`;
+}
 async function renderTeams() {
   const d = cache.teams;
   if (!d || !d.teams.length) return failed.teams || (d && !d.teams.length) ? empty("No team data yet", "Team pages refresh hourly.") : skeleton();
@@ -295,30 +344,42 @@ async function renderTeams() {
     OPP_PTS: "Points allowed", OPP_REB: "Rebounds allowed", OPP_AST: "Assists allowed", OPP_FG_PCT: "Opponent FG%", OPP_FG3_PCT: "Opponent 3P%", OPP_TOV: "Opponent turnovers" };
   const pk = (arr) => arr.length ? arr.map((p) => `<div class="row"><div class="main"><div class="t">${p.year} round ${p.round}${p.from && p.from !== "own" ? ", from " + esc(p.from) : ""}</div>
     <div class="s">${esc(p.protection || p.reason || "")}</div></div></div>`).join("") : `<div class="row"><span class="kv">None listed</span></div>`;
-  return sel + `<div class="hero">${logo(t.logo)}<div><div class="big">${esc(t.name)}</div>
+  return sel + `<div class="hero">${logo(t.logo, true)}<div><div class="big">${esc(t.name)}</div>
     <div class="kv">${esc(t.conf)}${t.seed ? ", seed " + esc(t.seed) : ""}, streak ${esc(t.streak || "n/a")}, last 10 ${esc(t.l10 || "n/a")}, home ${esc(t.home || "n/a")}, away ${esc(t.away || "n/a")}, behind ${esc(t.gb || "n/a")}</div></div>
     <div class="rec">${esc(t.w)}-${esc(t.l)}</div></div>
     ${title("Team stats")}${stats(t.stats, N)}
     ${title("What opponents do against them")}${stats(t.opp, N)}
     ${title("Players and salaries", t.players.length + " players")}<div class="tbl"><table class="sticky1"><thead><tr><th class="l">Player</th><th>Pos</th><th>Ht</th><th>Wt</th><th>Salary</th><th>Thru</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th></tr></thead><tbody>
     ${t.players.map((p) => `<tr><td class="l"><b>${esc(p.name)}</b></td><td>${esc(p.pos || "")}</td><td>${esc(p.ht || "")}</td><td>${p.wt || ""}</td><td>${money(p.salary)}</td><td>${esc(p.contract_end || "")}${p.option ? " (" + esc(p.option) + ")" : ""}</td><td>${p.gp}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td></tr>`).join("")}</tbody></table></div>
-    ${title("Draft picks they can trade")}<div class="list">${pk(t.picks.tradable)}</div>
+    ${mockPicksFor(t)}${title("Draft picks they can trade")}<div class="list">${pk(t.picks.tradable)}</div>
     ${title("Draft picks they cannot trade")}<div class="list">${pk(t.picks.locked)}</div>`;
 }
 
 /* ---------- Contracts ---------- */
 const STATUS_LABEL = { GUARANTEED: "Guaranteed", "NON-GUARANTEED": "Non-guaranteed", "TEAM OPTION": "Team option", "PLAYER OPTION": "Player option" };
+const EXT_CLASS = { eligible: "good", future: "", extended: "", rookie: "", ineligible: "bad", na: "", unknown: "" };
+function extLine(p) {
+  const bits = [];
+  if (p.since) bits.push(`<span class="kv">Since <b>${esc(p.since)}</b></span>`);
+  if (p.ext && p.ext.text && p.ext.text !== "-") bits.push(`<span class="kv">Ext. <span class="pill ${EXT_CLASS[p.ext.status] || ""}">${esc(p.ext.text)}</span></span>`);
+  if (p.trade) bits.push(`<span class="kv">Trade <span class="pill ${p.trade.type === "restricted" || p.trade.type === "ntc" ? "bad" : ""}">${esc(p.trade.text)}</span></span>`);
+  if (p.maxpct) bits.push(`<span class="kv">Max <b>${p.maxpct}%</b>${p.dv ? " DV" : ""}</span>`);
+  return bits.length ? `<div class="extline">${bits.join("")}</div>` : "";
+}
 function contractRows(d) {
   ui.cMore = Number(ui.cMore) || 60;
   const q = ui.q.trim().toLowerCase();
-  let list = d.players.filter((p) => (ui.cTeam === "all" || p.team === ui.cTeam) && (!q || p.name.toLowerCase().includes(q)));
+  let list = d.players.filter((p) => (ui.cTeam === "all" || p.team === ui.cTeam) && (!q || p.name.toLowerCase().includes(q))
+    && (ui.cExt === "all" || (p.ext && p.ext.status === ui.cExt)) && (ui.cTrade === "all" || (ui.cTrade === "none" ? !p.trade : p.trade && p.trade.type === ui.cTrade)));
   list = list.sort((a, b) => (b.years[0] ? b.years[0].sal : 0) - (a.years[0] ? a.years[0].sal : 0));
   const total = list.length; list = list.slice(0, ui.cMore);
   const rows = list.map((p) => {
     const yrs = p.years.map((y) => `<tr><td class="l">${esc(y.y)}</td><td>${money(y.sal)}</td><td>${y.ch && y.ch !== y.sal ? money(y.ch) : ""}</td><td class="l">${esc(STATUS_LABEL[y.st] || y.st)}</td></tr>`).join("");
-    const facts = [["Exception", p.exception], ["Signed", p.signed ? p.signed + (p.signed_by ? " by " + p.signed_by : "") : ""], ["Trade kicker", p.kicker],
+    const facts = [["With team since", p.since], ["Drafted", p.draft_year ? p.draft_year + (p.draft_pick ? ", pick " + p.draft_pick : "") : ""],
+      ["Max contract", p.maxpct ? p.maxpct + "% of cap" + (p.dv ? " (Designated Veteran eligible)" : "") : ""],
+      ["Extension", p.ext && p.ext.detail ? p.ext.text + ". " + p.ext.detail : ""], ["Trade", p.trade ? (p.trade.detail || p.trade.text) : ""], ["Exception", p.exception], ["Signed", p.signed ? p.signed + (p.signed_by ? " by " + p.signed_by : "") : ""], ["Trade kicker", p.kicker],
       ["Likely bonus", p.likely], ["Unlikely bonus", p.unlikely], ["Notes", p.notes]].filter((x) => x[1]).map((x) => `<span class="kv">${x[0]}: <b>${esc(x[1])}</b></span>`).join("");
-    return `<details class="p"><summary><span style="flex:1;min-width:0"><b>${esc(p.name)}</b> <span class="kv">${esc(p.team)}</span></span>
+    return `<details class="p"><summary><span style="flex:1;min-width:0"><b>${esc(p.name)}</b> <span class="kv">${tm(p.team, "nba")}</span>${extLine(p)}</span>
       <b>${money(p.years[0] && p.years[0].sal)}</b><span class="kv">${esc(p.end ? "thru " + p.end : "")}${p.option ? ", " + esc(p.option) : ""}</span></summary>
       <div class="pbody" style="padding-left:16px"><div class="tbl"><table><thead><tr><th class="l">Season</th><th>Salary</th><th>Cap hold</th><th class="l">Status</th></tr></thead><tbody>${yrs}</tbody></table></div>
       <div class="kv">Total guaranteed: <b>${money(p.total)}</b></div>${facts ? `<div class="facts">${facts}</div>` : ""}</div></details>`;
@@ -331,8 +392,11 @@ async function renderContracts() {
   if (!d) return failed.contracts ? empty("No contracts yet", "Contracts refresh hourly from HoopsMatic.") : skeleton();
   const teams = [...new Set(d.players.map((p) => p.team))].sort();
   const sel = `<select class="btn" data-act="cTeam" aria-label="Team"><option value="all">All teams</option>${teams.map((t) => `<option ${ui.cTeam === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`;
-  return `<div class="chips"><input id="q" class="btn" type="search" placeholder="Search players" value="${esc(ui.q)}" aria-label="Search players">${sel}</div>
-    <div id="clist">${contractRows(d)}</div><p class="note">Contract data from HoopsMatic. Cap holds shown only when they differ from salary.</p>`;
+  const opt = (cur, pairs) => pairs.map(([v, l]) => `<option value="${v}" ${cur === v ? "selected" : ""}>${l}</option>`).join("");
+  const selExt = `<select class="btn" data-act="cExt" aria-label="Extension eligibility">${opt(ui.cExt, [["all", "Any extension status"], ["eligible", "Extension eligible now"], ["future", "Eligible later"], ["extended", "Already extended"], ["rookie", "Rookie scale"], ["ineligible", "Ineligible"], ["na", "Not applicable"]])}</select>`;
+  const selTr = `<select class="btn" data-act="cTrade" aria-label="Trade status">${opt(ui.cTrade, [["all", "Any trade status"], ["restricted", "Trade restricted"], ["ntc", "No-trade clause"], ["expiring", "Expiring"], ["none", "No restriction"]])}</select>`;
+  return `<div class="chips"><input id="q" class="btn" type="search" placeholder="Search players" value="${esc(ui.q)}" aria-label="Search players">${sel}${selExt}${selTr}</div>
+    <div id="clist">${contractRows(d)}</div><p class="note">Contract data and the extension, trade and max contract rules follow hoopsmatic.com/contracts. Cap holds shown only when they differ from salary. Extension and trade dates are calculated from the signing date, so check the notes on unusual deals.</p>`;
 }
 
 /* ---------- Cap ---------- */
@@ -346,7 +410,7 @@ async function renderCap() {
   const detail = (t) => {
     const used = (e(t).mle_used_on || []).map((u) => `${esc(u.player)} ${money(u.amount)}`).join(", ");
     const tp = (t.tpes || []).map((x) => `<div class="row"><div class="main"><div class="t">${money(x.value)} trade exception</div><div class="s">Expires ${esc(x.expires)}</div></div></div>`).join("");
-    return `<details class="p"><summary><span style="flex:1"><b>${esc(t.team)}</b></span><span class="kv">${esc(t.status || "")}</span><span class="kv">${(t.tpes || []).length} TPE</span></summary>
+    return `<details class="p"><summary><span style="flex:1"><b>${tm(t.team, "nba")}</b></span><span class="kv">${esc(t.status || "")}</span><span class="kv">${(t.tpes || []).length} TPE</span></summary>
       <div class="pbody" style="padding-left:16px"><div class="kv">Mid-level: <b>${mle(t)}</b>${used ? ", used on " + used : ""}</div>
       <div class="kv">Bi-annual exception: <b>${e(t).bae != null ? money(e(t).bae) : "n/a"}</b></div>
       ${tp ? `<div class="list">${tp}</div>` : `<div class="kv">No trade exceptions</div>`}</div></details>`;
@@ -355,7 +419,7 @@ async function renderCap() {
     <div class="s">Cap ${money(th.salary_cap)}, tax ${money(th.luxury_tax)}, first apron ${money(th.first_apron)}, second apron ${money(th.second_apron)}</div></div></div></div>
     ${title("Space and room, by team")}<div class="tbl"><table class="sticky1">
     <thead><tr><th class="l">Team</th><th>Payroll</th><th>Cap space</th><th>Under tax by</th><th>Under 1st apron by</th><th>Under 2nd apron by</th><th class="l">Mid-level</th><th>BAE</th></tr></thead><tbody>
-    ${d.teams.map((t) => `<tr><td class="l"><b>${esc(t.team)}</b></td><td>${money(t.payroll)}</td>${cell(t.cap_space)}${cell(t.tax_room)}${cell(t.first_apron_room)}${cell(t.second_apron_room)}
+    ${d.teams.map((t) => `<tr><td class="l"><b>${tm(t.team, "nba")}</b></td><td>${money(t.payroll)}</td>${cell(t.cap_space)}${cell(t.tax_room)}${cell(t.first_apron_room)}${cell(t.second_apron_room)}
     <td class="l">${mle(t)}</td><td>${e(t).bae != null ? money(e(t).bae) : "n/a"}</td></tr>`).join("")}</tbody></table></div>
     ${title("Exceptions and trade exceptions")}<div class="list">${d.teams.map(detail).join("")}</div>
     <p class="note">Negative numbers mean the team is over that line. Source: ${esc(d.source || "")}.</p>`;
@@ -458,6 +522,7 @@ bell.addEventListener("click", toggleAlerts);
   const saved = location.hash.slice(1) || store("tab"); if (saved && RENDER[saved]) ui.tab = saved;
   drawTabs(); bellState();
   primeFromSaved();
+  loadLogos().then(() => draw(true));
   await draw();                               // paint the last saved data at once
   await Promise.all(DATA_FOR[ui.tab].concat("scores").map((n) => load(n, true)));
   await draw(); await localNotify();          // then swap in fresh data

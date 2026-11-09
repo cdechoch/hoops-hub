@@ -261,6 +261,7 @@ def run():
             }
         )
     c.write_data("draft", {"cycle": cycle, "label": f"{cycle} NBA Draft", "sources": list(per_source), "players": players,
+                           "mocks": c.read_config("cyro_mocks.json", {}),
                            "hoopsmatic": "used" if hm_used else ("skipped, board is for a past class" if hm.get("players") else "unavailable")})
 
 

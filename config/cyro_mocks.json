@@ -1,0 +1,282 @@
+{
+ "v1": {
+  "title": "Cyro Asseo & Mikey Visenberg Mock Draft 1.0",
+  "picks": [
+   {
+    "pick": 1,
+    "player": "Tyran Stokes"
+   },
+   {
+    "pick": 2,
+    "player": "Jordan Smith Jr."
+   },
+   {
+    "pick": 3,
+    "player": "Caleb Holt"
+   },
+   {
+    "pick": 4,
+    "player": "Stefan Joksimovic"
+   },
+   {
+    "pick": 5,
+    "player": "Ivan Kharchenkov"
+   },
+   {
+    "pick": 6,
+    "player": "Bruce Branch"
+   },
+   {
+    "pick": 7,
+    "player": "Hugo Yimga-Moukouri"
+   },
+   {
+    "pick": 8,
+    "player": "Abdou Toure"
+   },
+   {
+    "pick": 9,
+    "player": "Jason Crowe Jr."
+   },
+   {
+    "pick": 10,
+    "player": "Anthony Thompson"
+   },
+   {
+    "pick": 11,
+    "player": "Baba Oladotun"
+   },
+   {
+    "pick": 12,
+    "player": "Quentin Coleman"
+   },
+   {
+    "pick": 13,
+    "player": "Braylon Mullins"
+   },
+   {
+    "pick": 14,
+    "player": "Colben Landrew"
+   },
+   {
+    "pick": 15,
+    "player": "Cameron Williams"
+   },
+   {
+    "pick": 16,
+    "player": "Motiejus Krivas"
+   },
+   {
+    "pick": 17,
+    "player": "Brandon McCoy Jr."
+   },
+   {
+    "pick": 18,
+    "player": "Alijah Arenas"
+   },
+   {
+    "pick": 19,
+    "player": "Thomas Haugh"
+   },
+   {
+    "pick": 20,
+    "player": "Matt Able"
+   },
+   {
+    "pick": 21,
+    "player": "Dylan Mingo"
+   },
+   {
+    "pick": 22,
+    "player": "Patrick Ngongba II"
+   },
+   {
+    "pick": 23,
+    "player": "Sayon Keita"
+   },
+   {
+    "pick": 24,
+    "player": "Tyler Tanner"
+   },
+   {
+    "pick": 25,
+    "player": "Luigi Suigo"
+   },
+   {
+    "pick": 26,
+    "player": "Trey McKenney"
+   },
+   {
+    "pick": 27,
+    "player": "Amari Allen"
+   },
+   {
+    "pick": 28,
+    "player": "JJ Andrews"
+   },
+   {
+    "pick": 29,
+    "player": "Klark Riethauser"
+   },
+   {
+    "pick": 30,
+    "player": "Christian Collins"
+   }
+  ]
+ },
+ "v2": {
+  "title": "Cyro Asseo & Mikey Visenberg Mock Draft 2.0",
+  "picks": [
+   {
+    "pick": 1,
+    "team": "New Orleans Pelicans",
+    "player": "Tyran Stokes"
+   },
+   {
+    "pick": 2,
+    "team": "Sacramento Kings",
+    "player": "Stefan Joksimovic"
+   },
+   {
+    "pick": 3,
+    "team": "Memphis Grizzlies",
+    "player": "Jordan Smith Jr."
+   },
+   {
+    "pick": 4,
+    "team": "Houston Rockets",
+    "player": "Caleb Holt"
+   },
+   {
+    "pick": 5,
+    "team": "Orlando Magic",
+    "player": "Bruce Branch III"
+   },
+   {
+    "pick": 6,
+    "team": "Chicago Bulls",
+    "player": "Motiejus Krivas"
+   },
+   {
+    "pick": 7,
+    "team": "Washington Wizards",
+    "player": "Abdou Toure"
+   },
+   {
+    "pick": 8,
+    "team": "Charlotte Hornets",
+    "player": "Patrick Ngongba II"
+   },
+   {
+    "pick": 9,
+    "team": "Atlanta Hawks",
+    "player": "Quentin Coleman"
+   },
+   {
+    "pick": 10,
+    "team": "Houston Rockets",
+    "player": "Hugo Yimga Moukouri"
+   },
+   {
+    "pick": 11,
+    "team": "Charlotte Hornets",
+    "player": "Anthony Thompson"
+   },
+   {
+    "pick": 12,
+    "team": "Memphis Grizzlies",
+    "player": "Colben Landrew"
+   },
+   {
+    "pick": 13,
+    "team": "Oklahoma City Thunder",
+    "player": "Ivan Kharchenkov"
+   },
+   {
+    "pick": 14,
+    "team": "Miami Heat",
+    "player": "Braylon Mullins"
+   },
+   {
+    "pick": 15,
+    "team": "Indiana Pacers",
+    "player": "Alijah Arenas"
+   },
+   {
+    "pick": 16,
+    "team": "Golden State Warriors",
+    "player": "Luigi Suigo"
+   },
+   {
+    "pick": 17,
+    "team": "San Antonio Spurs",
+    "player": "Thomas Haugh"
+   },
+   {
+    "pick": 18,
+    "team": "Memphis Grizzlies",
+    "player": "Tyler Tanner"
+   },
+   {
+    "pick": 19,
+    "team": "Portland Trail Blazers",
+    "player": "JJ Andrews"
+   },
+   {
+    "pick": 20,
+    "team": "Los Angeles Clippers",
+    "player": "Cameron Williams"
+   },
+   {
+    "pick": 21,
+    "team": "Oklahoma City Thunder",
+    "player": "Amari Allen"
+   },
+   {
+    "pick": 22,
+    "team": "Brooklyn Nets",
+    "player": "Brandon McCoy"
+   },
+   {
+    "pick": 23,
+    "team": "Utah Jazz",
+    "player": "Jason Crowe Jr."
+   },
+   {
+    "pick": 24,
+    "team": "Philadelphia 76ers",
+    "player": "Tounde Yessoufou"
+   },
+   {
+    "pick": 25,
+    "team": "Phoenix Suns",
+    "player": "Baba Oladotun"
+   },
+   {
+    "pick": 26,
+    "team": "Boston Celtics",
+    "player": "Malachi Moreno"
+   },
+   {
+    "pick": 27,
+    "team": "Toronto Raptors",
+    "player": "Dylan Mingo"
+   },
+   {
+    "pick": 28,
+    "team": "Detroit Pistons",
+    "player": "Juke Harris"
+   },
+   {
+    "pick": 29,
+    "team": "Brooklyn Nets",
+    "player": "Christian Collins"
+   },
+   {
+    "pick": 30,
+    "team": "Oklahoma City Thunder",
+    "player": "Billy Richmond"
+   }
+  ]
+ }
+}

@@ -11,12 +11,12 @@ import sys
 import traceback
 
 import common as c
-import scores, news, trends, injuries, league, salaries, cap, draft, hoopsmatic, standings
+import scores, news, trends, injuries, league, salaries, cap, draft, hoopsmatic, standings, logos
 
 
 # A section with no data file yet runs its job right away, so a fresh deploy fills every tab on its first run.
 NEEDS = {"scores": "live", "news": "live", "trends": "live", "injuries": "live", "standings": "live",
-         "leaders": "hourly", "rookies": "hourly", "teams": "hourly", "contracts": "hourly", "cap": "hourly", "draft": "weekly"}
+         "leaders": "hourly", "rookies": "hourly", "teams": "hourly", "contracts": "hourly", "cap": "hourly", "draft": "weekly", "logos": "hourly"}
 
 
 def due():
@@ -65,6 +65,7 @@ def main():
         step(cap.run)
     if "hourly" in jobs:
         step(league.run)
+        step(logos.run)
     if "weekly" in jobs:
         step(draft.run)
     return 0

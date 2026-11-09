@@ -77,3 +77,10 @@ Cloudflare Pages also works: point it at the `web` folder. The workflow publishe
 ## Design
 
 The look is an early 2000s sports portal: pinstripe page, brushed metal header, folder tabs, a scrolling score ticker and aqua buttons for the selected control. Type is Helvetica. Colors and sizes live at the top of `web/style.css`. `scripts/dev_fixture.py` writes made up data into `web/data` so you can preview the app offline (those files are never committed).
+
+## Update notes (Nov 2026)
+- Square corners everywhere, light mode only.
+- Team logos on every player and team row (`pipeline/logos.py`, built-in table in `web/seed/logos.json`). Missing logos show initials.
+- Draft tab: Cyro Asseo and Mikey Visenberg Mock Draft 2.0 and 1.0 (edit `config/cyro_mocks.json`). Team pages show each team's mock 2.0 picks.
+- Contracts tab: with team since, extension eligibility, trade restriction, max contract percent, filters (`pipeline/contract_extras.py`, rules follow hoopsmatic.com/contracts).
+- News: HoopsHype Rumors feed is in `pipeline/news.py`.

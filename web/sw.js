@@ -1,4 +1,4 @@
-const SHELL = "hoops-shell-v2";
+const SHELL = "hoops-shell-v3";
 const FILES = ["./", "index.html", "style.css", "app.js", "icon.svg", "manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
